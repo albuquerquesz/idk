@@ -209,7 +209,7 @@ async function addHandlerInternal(
 
   if (!isSilent()) {
     renderTitle();
-    intro(pc.magenta("Add addons to your Better-T-Stack project"));
+    intro(pc.magenta("Add addons to your I dont know project"));
   }
 
   // Detect existing project configuration
@@ -218,7 +218,7 @@ async function addHandlerInternal(
   if (!existingConfig) {
     return Result.err(
       new CLIError({
-        message: `No Better-T-Stack project found in ${projectDir}. Make sure bts.jsonc exists.`,
+        message: `No I dont know project found in ${projectDir}. Make sure bts.jsonc exists.`,
       }),
     );
   }

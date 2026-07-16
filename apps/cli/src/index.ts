@@ -117,7 +117,7 @@ export function getSchemaResult(name: SchemaName): unknown {
 export const router = t.router({
   create: t.procedure
     .meta({
-      description: "Create a new Better-T-Stack project",
+      description: "Create a new I dont know project",
       default: true,
       negateBooleans: true,
     })
@@ -211,16 +211,16 @@ export const router = t.router({
     )
     .query(({ input }) => getSchemaResult(input.name)),
   sponsors: t.procedure
-    .meta({ description: "Show Better-T-Stack sponsors" })
+    .meta({ description: "Show I dont know sponsors" })
     .mutation(() => showSponsorsCommand()),
   docs: t.procedure
-    .meta({ description: "Open Better-T-Stack documentation" })
+    .meta({ description: "Open I dont know documentation" })
     .mutation(() => openDocsCommand()),
   builder: t.procedure
     .meta({ description: "Open the web-based stack builder" })
     .mutation(() => openBuilderCommand()),
   add: t.procedure
-    .meta({ description: "Add addons to an existing Better-T-Stack project" })
+    .meta({ description: "Add addons to an existing I dont know project" })
     .input(
       z.object({
         addons: z.array(AddonsSchema).optional().describe("Addons to add"),
@@ -285,7 +285,7 @@ export { Result } from "better-result";
 export type CreateError = UserCancelledError | CLIError | ProjectCreationError;
 
 /**
- * Programmatic API to create a new Better-T-Stack project.
+ * Programmatic API to create a new I dont know project.
  * Returns a Result type - no console output, no interactive prompts.
  *
  * @example
@@ -495,7 +495,7 @@ export type {
 export type { AddResult };
 
 /**
- * Programmatic API to add addons to an existing Better-T-Stack project.
+ * Programmatic API to add addons to an existing I dont know project.
  *
  * @example
  * ```typescript

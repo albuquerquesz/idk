@@ -1,19 +1,11 @@
 import gradient from "gradient-string";
 
 export const TITLE_TEXT = `
- ██████╗ ███████╗████████╗████████╗███████╗██████╗
- ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
- ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
- ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
- ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
- ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
-
- ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗
- ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
-    ██║       ███████╗   ██║   ███████║██║     █████╔╝
-    ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
-    ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
-    ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
+ IIIII        DDDD     OOO    N   N  TTTTT        K   K  N   N   OOO   W   W
+   I          D   D   O   O   NN  N    T          K  K   NN  N  O   O  W   W
+   I          D   D   O   O   N N N    T          KKK    N N N  O   O  W W W
+   I          D   D   O   O   N  NN    T          K  K   N  NN  O   O  WW WW
+ IIIII        DDDD     OOO    N   N    T          K   K  N   N   OOO   W   W
  `;
 
 const catppuccinTheme = {
@@ -36,7 +28,7 @@ export const renderTitle = () => {
   const titleWidth = Math.max(...titleLines.map((line) => line.length));
 
   if (terminalWidth < titleWidth) {
-    const simplifiedTitle = `Better T Stack`;
+    const simplifiedTitle = `I dont know`;
     console.log(gradient(Object.values(catppuccinTheme)).multiline(simplifiedTitle));
   } else {
     console.log(gradient(Object.values(catppuccinTheme)).multiline(TITLE_TEXT));
