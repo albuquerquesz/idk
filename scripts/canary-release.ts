@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import { confirm, isCancel, multiselect, spinner } from "@clack/prompts";
 import { $ } from "bun";
+import semver from "semver";
 
 const CLI_PACKAGE_JSON_PATH = join(process.cwd(), "apps/cli/package.json");
 const ALIAS_PACKAGE_JSON_PATH = join(process.cwd(), "packages/create-bts/package.json");
@@ -11,6 +12,40 @@ const TEMPLATE_GENERATOR_PACKAGE_JSON_PATH = join(
   process.cwd(),
   "packages/template-generator/package.json",
 );
+
+function isCanaryVersion(version: string): boolean {
+  return version.includes("-canary.") || version.includes("+canary.");
+}
+
+async function getPublishedVersions(packageName: string): Promise<string[]> {
+  const versionsJson = await $`npm view ${packageName} versions --json`.text();
+  const versions = JSON.parse(versionsJson) as string[];
+  return Array.isArray(versions) ? versions : [];
+}
+
+async function isDeprecated(packageName: string, version: string): Promise<boolean> {
+  try {
+    const deprecatedJson =
+      await $`npm view ${`${packageName}@${version}`} deprecated --json`.text();
+    const deprecatedMsg = deprecatedJson ? JSON.parse(deprecatedJson) : null;
+    return Boolean(deprecatedMsg);
+  } catch {
+    return false;
+  }
+}
+
+async function deprecateVersion(
+  packageName: string,
+  version: string,
+  replacementVersion: string,
+): Promise<boolean> {
+  try {
+    await $`npm deprecate -f ${`${packageName}@${version}`} "Deprecated canary; use ${packageName}@canary (currently ${replacementVersion})"`;
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
@@ -21,14 +56,7 @@ async function main(): Promise<void> {
   const packageJson = JSON.parse(await readFile(CLI_PACKAGE_JSON_PATH, "utf-8"));
   const currentVersion = packageJson.version;
   const packageName: string = packageJson.name || "create-better-t-stack";
-  const strictSemver = /^\d+\.\d+\.\d+$/;
-  let baseVersion = currentVersion;
-  if (strictSemver.test(currentVersion)) {
-    baseVersion = currentVersion;
-  } else {
-    const m = currentVersion.match(/^(\d+)\.(\d+)\.(\d+)/);
-    baseVersion = m ? m[0] : currentVersion;
-  }
+  const baseVersion = semver.coerce(currentVersion)?.version ?? currentVersion;
   console.log(`Current version: ${currentVersion}`);
   if (baseVersion !== currentVersion) {
     console.log(`Sanitized base version: ${baseVersion}`);
@@ -47,10 +75,8 @@ async function main(): Promise<void> {
 
   if (deprecateOld) {
     try {
-      const versionsJson = await $`npm view ${packageName} versions --json`.text();
-      const versions = JSON.parse(versionsJson) as string[];
-      const isCanary = (v: string) => v.includes("-canary.") || v.includes("+canary.");
-      const canaryVersions = (Array.isArray(versions) ? versions : []).filter(isCanary);
+      const versions = await getPublishedVersions(packageName);
+      const canaryVersions = versions.filter(isCanaryVersion);
 
       if (!canaryVersions.length) {
         console.log("ℹ️ No canary versions found to deprecate.");
@@ -59,14 +85,7 @@ async function main(): Promise<void> {
 
       const nonDeprecated: string[] = [];
       for (const v of canaryVersions) {
-        try {
-          const deprecatedJson =
-            await $`npm view ${`${packageName}@${v}`} deprecated --json`.text();
-          const deprecatedMsg = deprecatedJson ? JSON.parse(deprecatedJson) : null;
-          if (!deprecatedMsg || (typeof deprecatedMsg === "string" && deprecatedMsg.length === 0)) {
-            nonDeprecated.push(v);
-          }
-        } catch {
+        if (!(await isDeprecated(packageName, v))) {
           nonDeprecated.push(v);
         }
       }
@@ -76,10 +95,9 @@ async function main(): Promise<void> {
         depSpin.start(`Deprecating ${nonDeprecated.length} canary version(s)...`);
         let count = 0;
         for (const v of nonDeprecated) {
-          try {
-            await $`npm deprecate -f ${`${packageName}@${v}`} "Deprecated canary; use ${packageName}@canary (currently ${canaryVersion})"`;
+          if (await deprecateVersion(packageName, v, canaryVersion)) {
             count++;
-          } catch {}
+          }
         }
         depSpin.stop(`Deprecated ${count} version(s).`);
         return;
@@ -102,10 +120,9 @@ async function main(): Promise<void> {
       depSpin.start(`Deprecating ${selected.length} canary version(s)...`);
       let count = 0;
       for (const v of selected) {
-        try {
-          await $`npm deprecate -f ${`${packageName}@${v}`} "Deprecated canary; use ${packageName}@canary (currently ${canaryVersion})"`;
+        if (await deprecateVersion(packageName, v, canaryVersion)) {
           count++;
-        } catch {}
+        }
       }
       depSpin.stop(`Deprecated ${count} version(s).`);
       return;
@@ -116,30 +133,8 @@ async function main(): Promise<void> {
   }
 
   try {
-    const versionsJson = await $`npm view ${packageName} versions --json`.text();
-    const versions = JSON.parse(versionsJson) as string[];
+    const versions = await getPublishedVersions(packageName);
     if (Array.isArray(versions) && versions.includes(canaryVersion)) {
-      if (deprecateOld) {
-        const depSpin = spinner();
-        depSpin.start("Deprecating older canary versions (no publish)...");
-        try {
-          const isCanary = (v: string) => v.includes("-canary.") || v.includes("+canary.");
-          let count = 0;
-          for (const v of versions) {
-            if (!isCanary(v) || v === canaryVersion) continue;
-            await $`npm deprecate -f ${`${packageName}@${v}`} "Deprecated canary; use ${packageName}@canary (currently ${canaryVersion})"`;
-            count++;
-          }
-          depSpin.stop(`Deprecated ${count} older canary versions`);
-        } catch (err) {
-          depSpin.stop("Failed to deprecate older canaries");
-          console.warn("⚠️ Failed to deprecate older canaries:", err);
-        }
-        console.error(
-          `❌ ${packageName}@${canaryVersion} is already published on npm. Skipped publish after deprecating older canaries.`,
-        );
-        return;
-      }
       console.error(
         `❌ ${packageName}@${canaryVersion} is already published on npm. Make a new commit (or clean your workspace) and try again.`,
       );
@@ -263,13 +258,11 @@ async function main(): Promise<void> {
     if (deprecateOld) {
       console.log("🔎 Cleaning up older canary versions (deprecating)...");
       try {
-        const versionsJson = await $`npm view ${packageName} versions --json`.text();
-        const versions = JSON.parse(versionsJson) as string[];
-        const isCanary = (v: string) => v.includes("-canary.") || v.includes("+canary.");
+        const versions = await getPublishedVersions(packageName);
         for (const v of versions) {
-          if (!isCanary(v) || v === canaryVersion) continue;
+          if (!isCanaryVersion(v) || v === canaryVersion) continue;
           console.log(`➡️ Deprecating ${packageName}@${v}`);
-          await $`npm deprecate -f ${`${packageName}@${v}`} "Deprecated canary; use ${packageName}@canary (currently ${canaryVersion})"`;
+          await deprecateVersion(packageName, v, canaryVersion);
         }
         console.log("🧹 Older canaries deprecated.");
       } catch (err) {

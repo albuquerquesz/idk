@@ -27,7 +27,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --filter=web",
-    "cli": "turbo run dev --filter=create-better-t-stack",
+    "cli": "bun run build:cli && ./apps/cli/dist/cli.mjs",
     "smoke:publish": "bun run scripts/publish-smoke.ts",
     "build:web": "turbo run build --filter=web",
     "build:cli": "turbo run build --filter=create-better-t-stack",
