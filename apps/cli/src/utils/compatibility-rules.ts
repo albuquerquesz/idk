@@ -529,19 +529,11 @@ export function validateAddonsAgainstConfig(
 
 export function validatePaymentsCompatibility(
   payments: Payments | undefined,
-  auth: Auth | undefined,
+  _auth: Auth | undefined,
   _backend: Backend | undefined,
   _frontends: Frontend[] = [],
 ): ValidationResult {
   if (!payments || payments === "none") return Result.ok(undefined);
-
-  if (payments === "polar") {
-    if (!auth || auth === "none" || auth !== "better-auth") {
-      return validationErr(
-        "Polar payments requires Better Auth. Please use '--auth better-auth' or choose a different payments provider.",
-      );
-    }
-  }
 
   return Result.ok(undefined);
 }

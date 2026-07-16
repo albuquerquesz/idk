@@ -260,7 +260,7 @@ function buildNativeVars(
 function buildConvexBackendVars(
   frontend: string[],
   auth: ProjectConfig["auth"],
-  payments: ProjectConfig["payments"],
+  _payments: ProjectConfig["payments"],
   examples: ProjectConfig["examples"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
@@ -343,36 +343,13 @@ function buildConvexBackendVars(
     }
   }
 
-  if (payments === "polar") {
-    vars.push(
-      {
-        key: "POLAR_ORGANIZATION_TOKEN",
-        value: "",
-        condition: true,
-        comment: "Polar organization token",
-      },
-      {
-        key: "POLAR_WEBHOOK_SECRET",
-        value: "",
-        condition: true,
-        comment: "Polar webhook secret",
-      },
-      {
-        key: "POLAR_SERVER",
-        value: "sandbox",
-        condition: true,
-        comment: "Polar environment: sandbox or production",
-      },
-    );
-  }
-
   return vars;
 }
 
 function buildConvexCommentBlocks(
   frontend: string[],
   auth: ProjectConfig["auth"],
-  payments: ProjectConfig["payments"],
+  _payments: ProjectConfig["payments"],
   examples: ProjectConfig["examples"],
 ): string {
   const needsConvexSiteUrl =
@@ -414,17 +391,6 @@ function buildConvexCommentBlocks(
 ${needsConvexSiteUrl ? `# npx convex env set CONVEX_SITE_URL ${CONVEX_SITE_URL_PLACEHOLDER}\n` : ""}${hasWeb || hasNative ? `# npx convex env set SITE_URL ${defaultSiteUrl}\n` : ""}`;
   }
 
-  if (payments === "polar") {
-    commentBlocks += `# Set Polar environment variables
-# npx convex env set POLAR_ORGANIZATION_TOKEN your_polar_token
-# npx convex env set POLAR_WEBHOOK_SECRET your_polar_webhook_secret
-# Optional: npx convex env set POLAR_SERVER production
-# Create a Polar webhook at https://<your-convex-site-url>/polar/events
-# Enable: product.created, product.updated, subscription.created, subscription.updated
-
-`;
-  }
-
   return commentBlocks;
 }
 
@@ -439,25 +405,12 @@ function buildServerVars(
   runtime: ProjectConfig["runtime"],
   webDeploy: ProjectConfig["webDeploy"],
   serverDeploy: ProjectConfig["serverDeploy"],
-  payments: ProjectConfig["payments"],
+  _payments: ProjectConfig["payments"],
   examples: ProjectConfig["examples"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
   const hasSvelte = frontend.includes("svelte");
   const hasAstro = frontend.includes("astro");
-  const hasNative =
-    frontend.includes("native-bare") ||
-    frontend.includes("native-uniwind") ||
-    frontend.includes("native-unistyles");
-  const hasWeb =
-    hasReactRouter ||
-    hasSvelte ||
-    hasAstro ||
-    frontend.includes("tanstack-router") ||
-    frontend.includes("tanstack-start") ||
-    frontend.includes("next") ||
-    frontend.includes("nuxt") ||
-    frontend.includes("solid");
 
   let corsOrigin = "http://localhost:3001";
   if (hasAstro) {
@@ -473,11 +426,6 @@ function buildServerVars(
           ? "http://localhost:4321"
           : "http://localhost:3001"
       : "http://localhost:3000";
-  const polarSuccessUrl =
-    hasNative && !hasWeb
-      ? `${betterAuthUrl}/polar/success`
-      : `${corsOrigin}/success?checkout_id={CHECKOUT_ID}`;
-
   let databaseUrl: string | null = null;
   if (database !== "none" && dbSetup === "none") {
     switch (database) {
@@ -527,16 +475,6 @@ function buildServerVars(
       key: "CLERK_PUBLISHABLE_KEY",
       value: "",
       condition: needsClerkPublishableKey,
-    },
-    {
-      key: "POLAR_ACCESS_TOKEN",
-      value: "",
-      condition: payments === "polar",
-    },
-    {
-      key: "POLAR_SUCCESS_URL",
-      value: polarSuccessUrl,
-      condition: payments === "polar",
     },
     {
       key: "CORS_ORIGIN",

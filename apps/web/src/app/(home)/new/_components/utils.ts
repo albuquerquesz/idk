@@ -615,17 +615,6 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // PAYMENTS CONSTRAINTS
   // ============================================
 
-  if (nextStack.payments === "polar") {
-    if (nextStack.auth !== "better-auth") {
-      nextStack.payments = "none";
-      changed = true;
-      changes.push({
-        category: "payments",
-        message: "Payments set to 'None' (Polar requires Better Auth)",
-      });
-    }
-  }
-
   // ============================================
   // ADDONS CONSTRAINTS
   // ============================================

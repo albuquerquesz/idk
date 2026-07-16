@@ -9019,9 +9019,6 @@ import { authClient } from "../lib/auth-client";
 </script>
 `],
   ["auth/better-auth/web/astro/src/lib/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/client";
-{{#if (eq payments "polar")}}
-import { polarClient } from "@polar-sh/better-auth/client";
-{{/if}}
 {{#if (ne backend "self")}}
 import { PUBLIC_SERVER_URL } from "astro:env/client";
 {{/if}}
@@ -9035,9 +9032,6 @@ export const authClient = createAuthClient({
   // better-auth derives its route-matching base from this URL's path, so the
 	// public auth path must equal the server-side mount (/api/auth everywhere)
 	  baseURL: new URL("/api/auth", getServerUrl(PUBLIC_SERVER_URL)).toString(),
-{{/if}}
-{{#if (eq payments "polar")}}
-  plugins: [polarClient()],
 {{/if}}
 });
 `],
@@ -9561,9 +9555,6 @@ watchEffect(() => {
 </template>
 `],
   ["auth/better-auth/web/nuxt/app/plugins/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/vue";
-{{#if (eq payments "polar")}}
-import { polarClient } from "@polar-sh/better-auth/client";
-{{/if}}
 
 export default defineNuxtPlugin(() => {
   {{#if (ne backend "self")}}
@@ -9580,9 +9571,6 @@ export default defineNuxtPlugin(() => {
     {{#if (ne backend "self")}}
     baseURL: new URL("/api/auth", serverOrigin).toString(),
     {{/if}}
-    {{#if (eq payments "polar")}}
-    plugins: [polarClient()],
-    {{/if}}
   });
 
   return {
@@ -9593,9 +9581,6 @@ export default defineNuxtPlugin(() => {
 });
 `],
   ["auth/better-auth/web/react/base/src/lib/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/react";
-{{#if (eq payments "polar")}}
-import { polarClient } from "@polar-sh/better-auth/client";
-{{/if}}
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
 
@@ -9608,9 +9593,6 @@ export const authClient = createAuthClient({
 	// public auth path must equal the server-side mount (/api/auth everywhere)
 		baseURL: new URL("/api/auth", getServerUrl(env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}})).toString(),
 {{/unless}}
-{{#if (eq payments "polar")}}
-	plugins: [polarClient()]
-{{/if}}
 });
 `],
   ["auth/better-auth/web/react/next/src/app/dashboard/dashboard.tsx.hbs", `"use client";
@@ -11895,9 +11877,6 @@ export default function UserMenu() {
 }
 `],
   ["auth/better-auth/web/solid/src/lib/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/solid";
-{{#if (eq payments "polar")}}
-import { polarClient } from "@polar-sh/better-auth/client";
-{{/if}}
 import { env } from "@{{projectName}}/env/web";
 
 {{> getServerUrl}}
@@ -11906,9 +11885,6 @@ export const authClient = createAuthClient({
 	// better-auth derives its route-matching base from this URL's path, so the
 	// public auth path must equal the server-side mount (/api/auth everywhere)
 		baseURL: new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(),
-{{#if (eq payments "polar")}}
-	plugins: [polarClient()]
-{{/if}}
 });
 `],
   ["auth/better-auth/web/solid/src/routes/dashboard.tsx.hbs", `import { authClient } from "@/lib/auth-client";
@@ -12317,9 +12293,6 @@ function RouteComponent() {
 import { PUBLIC_SERVER_URL } from "$env/static/public";
 {{/unless}}
 import { createAuthClient } from "better-auth/svelte";
-{{#if (eq payments "polar")}}
-import { polarClient } from "@polar-sh/better-auth/client";
-{{/if}}
 
 {{#unless (eq backend "self")}}
 {{> getServerUrl}}
@@ -12329,11 +12302,8 @@ export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
 	// better-auth derives its route-matching base from this URL's path, so the
 	// public auth path must equal the server-side mount (/api/auth everywhere)
-		baseURL: new URL("/api/auth", getServerUrl(PUBLIC_SERVER_URL)).toString(),
+	baseURL: new URL("/api/auth", getServerUrl(PUBLIC_SERVER_URL)).toString(),
 {{/unless}}
-{{#if (eq payments "polar")}}
-	plugins: [polarClient()]
-{{/if}}
 });
 `],
   ["auth/better-auth/web/svelte/src/routes/dashboard/+page.svelte.hbs", `<script lang="ts">

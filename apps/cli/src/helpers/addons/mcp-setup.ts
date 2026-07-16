@@ -80,7 +80,7 @@ function getAllMcpServers(config: ProjectConfig): McpServerDef[] {
   return [
     {
       key: "better-t-stack",
-      label: "Better T Stack",
+      label: "I dont know",
       name: "better-t-stack",
       target: getPackageExecutionCommand(config.packageManager, "create-better-t-stack@latest mcp"),
     },
@@ -180,12 +180,6 @@ function getAllMcpServers(config: ProjectConfig): McpServerDef[] {
       label: "Expo",
       name: "expo-mcp",
       target: "https://mcp.expo.dev/mcp",
-    },
-    {
-      key: "polar",
-      label: "Polar",
-      name: "polar",
-      target: "https://mcp.polar.sh/mcp/polar-mcp",
     },
   ];
 }

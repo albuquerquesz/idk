@@ -136,10 +136,6 @@ export async function displayPostInstallInstructions(
     isConvex && config.auth === "better-auth"
       ? getBetterAuthConvexInstructions(hasWeb ?? false, webPort, packageManager, runCmd)
       : "";
-  const polarInstructions =
-    config.payments === "polar" && config.auth === "better-auth"
-      ? getPolarInstructions(backend, packageManager)
-      : "";
 
   const bunWebNativeWarning =
     packageManager === "bun" && hasNative && hasWeb ? getBunWebNativeWarning() : "";
@@ -234,7 +230,6 @@ export async function displayPostInstallInstructions(
   if (starlightInstructions) output += `\n${starlightInstructions.trim()}\n`;
   if (clerkInstructions) output += `\n${clerkInstructions.trim()}\n`;
   if (betterAuthConvexInstructions) output += `\n${betterAuthConvexInstructions.trim()}\n`;
-  if (polarInstructions) output += `\n${polarInstructions.trim()}\n`;
   // Deploy steps come last so env sync happens after auth/payment keys exist
   if (alchemyDeployInstructions) output += `\n${alchemyDeployInstructions.trim()}\n`;
 
@@ -250,9 +245,7 @@ export async function displayPostInstallInstructions(
     output += `\n${specialSponsorsSection.trim()}\n`;
   }
 
-  output += `\n${pc.bold(
-    "Like Better-T-Stack?",
-  )} Please consider giving us a star\n   on GitHub:\n`;
+  output += `\n${pc.bold("Like I dont know?")} Please consider giving us a star\n   on GitHub:\n`;
   output += pc.cyan("https://github.com/AmanVarshney01/create-better-t-stack");
 
   cliConsola.box(output);
@@ -592,25 +585,6 @@ function getBetterAuthConvexInstructions(
     `${pc.white(`   ${cmd} convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)`)}\n` +
     (hasWeb ? `${pc.white(`   ${cmd} convex env set SITE_URL http://localhost:${webPort}`)}\n` : "")
   );
-}
-
-function getPolarInstructions(backend: Backend, packageManager: string) {
-  if (backend === "convex") {
-    const cmd = packageManager === "npm" ? "npx" : packageManager;
-    return (
-      `${pc.bold("Polar Payments Setup:")}\n` +
-      `${pc.cyan("•")} Create a Polar organization token, webhook secret, and product in ${pc.underline("https://sandbox.polar.sh/")}\n` +
-      `${pc.cyan("•")} Set the Convex env vars from ${pc.white("packages/backend")}:\n` +
-      `${pc.white("   cd packages/backend")}\n` +
-      `${pc.white(`   ${cmd} convex env set POLAR_ORGANIZATION_TOKEN your_polar_token`)}\n` +
-      `${pc.white(`   ${cmd} convex env set POLAR_WEBHOOK_SECRET your_polar_webhook_secret`)}\n` +
-      `${pc.white(`   Optional: ${cmd} convex env set POLAR_SERVER production`)}\n` +
-      `${pc.cyan("•")} Configure a Polar webhook to ${pc.white("https://<your-convex-site-url>/polar/events")}`
-    );
-  }
-
-  const envPath = backend === "self" ? "apps/web/.env" : "apps/server/.env";
-  return `${pc.bold("Polar Payments Setup:")}\n${pc.cyan("•")} Get access token & product ID from ${pc.underline("https://sandbox.polar.sh/")}\n${pc.cyan("•")} Set POLAR_ACCESS_TOKEN in ${envPath}`;
 }
 
 function getAlchemyDeployInstructions(

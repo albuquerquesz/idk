@@ -1,7 +1,4 @@
 import { createAuthClient } from "better-auth/react";
-{{#if (eq payments "polar")}}
-import { polarClient } from "@polar-sh/better-auth/client";
-{{/if}}
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
 
@@ -14,7 +11,4 @@ export const authClient = createAuthClient({
 	// public auth path must equal the server-side mount (/api/auth everywhere)
 		baseURL: new URL("/api/auth", getServerUrl(env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}})).toString(),
 {{/unless}}
-{{#if (eq payments "polar")}}
-	plugins: [polarClient()]
-{{/if}}
 });

@@ -123,7 +123,6 @@ export const dependencyVersionMap = {
   convex: "^1.42.1",
   "@convex-dev/react-query": "^0.1.0",
   "@convex-dev/agent": "^0.6.4",
-  "@convex-dev/polar": "^0.9.2",
   "convex-svelte": "^0.14.0",
   "convex-nuxt": "0.1.5",
   "convex-vue": "^0.1.5",
@@ -167,12 +166,6 @@ export const dependencyVersionMap = {
   "@t3-oss/env-core": "^0.13.11",
   "@t3-oss/env-nextjs": "^0.13.11",
   "@t3-oss/env-nuxt": "^0.13.11",
-
-  "@polar-sh/better-auth": "^1.8.4",
-  "@polar-sh/checkout": "^0.4.0",
-  "@polar-sh/sdk": "^0.47.1",
-  "@stripe/react-stripe-js": "^5.6.1",
-  "@stripe/stripe-js": "^8.11.0",
 
   evlog: "^2.19.2",
 } as const;

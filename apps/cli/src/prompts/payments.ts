@@ -16,18 +16,7 @@ export async function getPaymentsChoice(
     return "none" as Payments;
   }
 
-  const isPolarCompatible = auth === "better-auth";
-
-  if (!isPolarCompatible) {
-    return "none" as Payments;
-  }
-
   const options = [
-    {
-      value: "polar" as Payments,
-      label: "Polar",
-      hint: "Turn your software into a business. 6 lines of code.",
-    },
     {
       value: "none" as Payments,
       label: "None",

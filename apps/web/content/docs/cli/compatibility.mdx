@@ -223,30 +223,6 @@ Clerk authentication requires:
 - Fullstack (`--backend self`) support with Next.js or TanStack Start
 - Not compatible with Nuxt, Svelte, Solid, or Astro
 
-### Payments Requirements
-
-Polar payments require:
-
-- Better-Auth authentication
-- A web frontend (or no frontend selected)
-
-```bash
-# ✅ Valid - Better-Auth without database
-create-better-t-stack --auth better-auth --database none
-
-# ✅ Valid - Better-Auth with full stack
-create-better-t-stack --auth better-auth --database postgres --orm drizzle --backend hono
-
-# ✅ Valid - Clerk with Hono
-create-better-t-stack --auth clerk --backend hono --frontend tanstack-router
-
-# ✅ Valid - Clerk with fullstack Next.js
-create-better-t-stack --auth clerk --backend self --frontend next
-
-# ❌ Invalid - Clerk with Astro
-create-better-t-stack --auth clerk --backend self --frontend astro
-```
-
 ## Example Compatibility
 
 ### Todo Example
@@ -282,16 +258,6 @@ create-better-t-stack --runtime workers --backend hono
 ```bash
 # Fix by choosing one web framework
 create-better-t-stack --frontend tanstack-router
-```
-
-### "Polar payments requires Better Auth"
-
-```bash
-# Fix by using Better-Auth
-create-better-t-stack --payments polar --auth better-auth
-
-# Or use Clerk without Polar payments
-create-better-t-stack --auth clerk --backend hono --frontend tanstack-router
 ```
 
 ## Validation Strategy
