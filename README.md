@@ -84,11 +84,11 @@ git clone https://github.com/AmanVarshney01/create-better-t-stack.git
 # Install dependencies
 bun install
 
-# Start CLI development
-bun dev:cli
-
 # Start website development
-bun dev:web
+bun dev
+
+# Start CLI development
+bun cli
 ```
 
 ## Want to contribute?

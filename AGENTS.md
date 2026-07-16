@@ -14,8 +14,8 @@ This repo is a Bun + Turborepo monorepo.
 ## Build, Test, and Development Commands
 
 - `bun install`: install workspace dependencies.
-- `bun dev:cli`: watch-build CLI package.
-- `bun dev:web`: run web app locally (`next dev --port 3333`).
+- `bun dev`: run web app locally (`next dev --port 3333`).
+- `bun cli`: watch-build CLI package.
 - `bun build`: build all packages/apps through Turbo.
 - `bun build:cli`: build only the CLI target.
 - `bun run check`: format + lint (`oxfmt . && oxlint .`).
