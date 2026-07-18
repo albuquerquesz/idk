@@ -95,13 +95,9 @@ export const metadata: Metadata = {
   },
   category: "Technology",
   icons: {
-    icon: [
-      { url: "/favicon/favicon.svg", type: "image/svg+xml" },
-      { url: "/logo-light.svg", media: "(prefers-color-scheme: light)", type: "image/svg+xml" },
-      { url: "/logo-dark.svg", media: "(prefers-color-scheme: dark)", type: "image/svg+xml" },
-    ],
-    shortcut: "/favicon/favicon.svg",
-    apple: "/favicon/apple-touch-icon.png",
+    icon: [{ url: "/favicon/favicon-96x96.png", sizes: "96x96", type: "image/png" }],
+    shortcut: "/favicon/favicon-96x96.png",
+    apple: [{ url: "/favicon/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
 };
 

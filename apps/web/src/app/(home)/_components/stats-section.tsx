@@ -27,7 +27,7 @@ export default function StatsSection() {
   const stats = useQuery(api.analytics.getStats, {});
   const monthlyStats = useQuery(api.analytics.getMonthlyStats, {});
   const githubRepo = useQuery(api.stats.getGithubRepo, {
-    name: "AmanVarshney01/create-better-t-stack",
+    name: "albuquerquesz/idk",
   }) as GithubRepoStats | null | undefined;
   const npmPackages = useQuery(api.stats.getNpmPackages, {
     names: ["create-better-t-stack"],
@@ -99,11 +99,7 @@ export default function StatsSection() {
         </div>
       </Link>
 
-      <Link
-        href="https://github.com/AmanVarshney01/create-better-t-stack"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <Link href="https://github.com/albuquerquesz/idk" target="_blank" rel="noopener noreferrer">
         <div className="group cursor-pointer rounded-2xl bg-fd-background/75 p-4 transition-colors hover:bg-muted/10">
           <div className="mb-3 flex items-center gap-2">
             <FaGithub className="h-4 w-4 text-primary" />
@@ -142,9 +138,7 @@ export default function StatsSection() {
             <div className="rounded-lg bg-muted/15 px-2.5 py-2">
               <div className="flex items-center justify-between gap-2 text-xs">
                 <span className="font-mono text-muted-foreground">Repository</span>
-                <span className="truncate font-mono text-accent">
-                  AmanVarshney01/create-better-t-stack
-                </span>
+                <span className="truncate font-mono text-accent">albuquerquesz/idk</span>
               </div>
             </div>
           </div>
