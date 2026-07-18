@@ -7,6 +7,9 @@ import { useConvexQuery } from "convex-vue";
 const { $orpc } = useNuxtApp()
 import { useQuery } from '@tanstack/vue-query'
   {{/unless}}
+  {{#if (eq payments "abacatepay")}}
+const config = useRuntimeConfig()
+  {{/if}}
 {{/if}}
 
 const TITLE_TEXT = `
@@ -37,6 +40,22 @@ onServerPrefetch(async () => {
   } catch {}
 })
   {{/unless}}
+{{/if}}
+{{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+
+async function openCheckout() {
+  const baseUrl = {{#if (eq backend "self")}}""{{else}}config.public.serverUrl{{/if}}
+  const response = await fetch(`${baseUrl}/api/payments/abacatepay/checkout`, {
+    method: "POST",
+  })
+  if (!response.ok) return
+  const payload = await response.json() as { data?: { url?: string } }
+  if (payload.data?.url) {
+    await navigateTo(payload.data.url, {
+      external: true,
+    })
+  }
+}
 {{/if}}
 </script>
 
@@ -98,6 +117,20 @@ onServerPrefetch(async () => {
         {{/unless}}
         {{/if}}
       </UCard>
+      {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+      <UCard>
+        <template #header>
+          <div class="font-medium">Hosted Checkout</div>
+        </template>
+
+        <p class="mb-4 text-sm text-muted">
+          Launch a sample AbacatePay checkout without requiring sign-in.
+        </p>
+        <UButton @click="openCheckout">
+          Open Checkout
+        </UButton>
+      </UCard>
+      {{/if}}
     </div>
   </UContainer>
 </template>

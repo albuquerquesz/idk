@@ -763,6 +763,15 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     });
   }
 
+  if (nextStack.serverDeploy === "guaracloud" && nextStack.runtime === "workers") {
+    nextStack.serverDeploy = "cloudflare";
+    changed = true;
+    changes.push({
+      category: "serverDeploy",
+      message: "Server deploy set to 'Cloudflare' (Workers runtime deploys via Cloudflare)",
+    });
+  }
+
   if (
     nextStack.serverDeploy !== "none" &&
     (["none", "convex"].includes(nextStack.backend) ||
@@ -1112,9 +1121,29 @@ export const getDisabledReason = (
   // ============================================
   // PAYMENTS CONSTRAINTS
   // ============================================
-  if (category === "payments" && optionId === "polar") {
-    if (currentStack.auth !== "better-auth") {
+  if (category === "payments") {
+    if (optionId === "polar" && currentStack.auth !== "better-auth") {
       return "Polar requires Better Auth";
+    }
+
+    if (optionId === "abacatepay") {
+      if (currentStack.backend === "convex") {
+        return "AbacatePay is not supported with Convex";
+      }
+      if (!currentStack.webFrontend.some((f) => f !== "none")) {
+        return "AbacatePay requires a web frontend";
+      }
+      if (currentStack.nativeFrontend.some((f) => f !== "none")) {
+        return "AbacatePay v1 does not support native-only apps";
+      }
+      if (
+        currentStack.database === "none" ||
+        currentStack.orm === "none" ||
+        currentStack.database === "mongodb" ||
+        currentStack.orm === "mongoose"
+      ) {
+        return "AbacatePay v1 requires a SQL database with Prisma or Drizzle";
+      }
     }
   }
 
@@ -1219,6 +1248,9 @@ export const getDisabledReason = (
     }
     if (optionId === "vercel" && currentStack.runtime === "workers") {
       return "Vercel server deployment requires the Bun or Node runtime";
+    }
+    if (optionId === "guaracloud" && currentStack.runtime === "workers") {
+      return "Guara Cloud server deployment requires the Bun or Node runtime";
     }
     if (optionId !== "none") {
       if (

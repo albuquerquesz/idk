@@ -154,6 +154,8 @@ function generateReadmeContent(options: ProjectConfig): string {
     packageManager,
     database,
     auth,
+    payments,
+    observability,
     addons = [],
     orm = "drizzle",
     runtime = "bun",
@@ -187,7 +189,7 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 
 ## Features
 
-${generateFeaturesList(database, auth, addons, orm, runtime, frontend, backend, api, dbSetup)}
+${generateFeaturesList(database, auth, payments, observability, addons, orm, runtime, frontend, backend, api, dbSetup)}
 
 ## Getting Started
 
@@ -230,6 +232,8 @@ ${
 ${getClerkSetupLines(frontend, backend, api, false).join("\n")}`
     : ""
 }
+${payments === "abacatepay" ? generateAbacatePaySetup(options, packageManagerRunCmd, webPort) : ""}
+${observability === "getmonitor" ? generateGetMonitorSetup(backend, webPort) : ""}
 
 Then, run the development server:
 
@@ -362,8 +366,76 @@ If you want to add app-specific blocks instead of shared primitives, run the sha
 `;
 }
 
+function generateAbacatePaySetup(
+  config: ProjectConfig,
+  packageManagerRunCmd: string,
+  webPort: string,
+): string {
+  const { backend, database, dbSetup, payments } = config;
+  if (payments !== "abacatepay") return "";
+
+  const envPath = backend === "self" ? "apps/web/.env" : "apps/server/.env";
+  const localBaseUrl = backend === "self" ? `http://localhost:${webPort}` : "http://localhost:3000";
+  const setupSteps = [
+    `1. Configure these variables in \`${envPath}\`:\n- \`ABACATEPAY_API_KEY\`: your AbacatePay API key for server-to-server checkout creation\n- \`ABACATEPAY_WEBHOOK_SECRET\`: shared secret used in the webhook URL query string\n- \`ABACATEPAY_PUBLIC_KEY\`: public key used to verify \`X-Webhook-Signature\`\n- \`ABACATEPAY_RETURN_URL\`: where AbacatePay sends users when they leave checkout\n- \`ABACATEPAY_COMPLETION_URL\`: success page that reads local checkout status after webhook reconciliation`,
+  ];
+
+  if (database !== "none" && dbSetup === "none") {
+    setupSteps.push(
+      `2. Make sure \`DATABASE_URL\` is set in \`${envPath}\`. Payment status is stored locally and the success page reads that persisted state.`,
+    );
+  }
+
+  setupSteps.push(
+    `${setupSteps.length + 1}. Make sure \`CORS_ORIGIN\` in \`${envPath}\` matches your local web app URL.`,
+  );
+
+  if (database !== "none") {
+    setupSteps.push(
+      `${setupSteps.length + 1}. Apply the schema before testing checkout:\n\`\`\`bash\n${packageManagerRunCmd} db:push\n\`\`\``,
+    );
+  }
+
+  setupSteps.push(
+    `${setupSteps.length + 1}. Build from the project root after env is configured:\n\`\`\`bash\n${packageManagerRunCmd} build\n\`\`\``,
+    `${setupSteps.length + 2}. Start the app and trigger the sample hosted checkout from the generated UI.`,
+    `${setupSteps.length + 3}. Configure this webhook URL in AbacatePay:\n\`${localBaseUrl}/api/payments/abacatepay/webhook?webhookSecret=YOUR_WEBHOOK_SECRET\``,
+    `${setupSteps.length + 4}. After payment, verify the success page and status endpoint reflect the locally stored checkout state instead of trusting the redirect alone.`,
+  );
+
+  return `
+## AbacatePay Setup
+
+This project includes a sample hosted-checkout integration for AbacatePay.
+
+${setupSteps.join("\n\n")}
+
+### Production note
+
+The scaffold keeps a placeholder \`prod_your_product_id\` in \`packages/payments/src/lib/abacatepay.ts\`. Replace that hardcoded product ID in code before using this integration for real transactions.
+`;
+}
+
+function generateGetMonitorSetup(backend: ProjectConfig["backend"], webPort: string): string {
+  const localTarget =
+    backend === "none" ? `http://localhost:${webPort}` : "your deployed public health URL";
+
+  return `
+## GetMonitor Setup
+
+This project is ready to be monitored by [GetMonitor](https://getmonitor.io). GetMonitor checks public HTTP endpoints, sends alerts when status changes, and can publish a hosted status page.
+
+1. Deploy the application and choose a stable public endpoint to monitor. Prefer a lightweight health endpoint when your service provides one; otherwise monitor a public page or API route that represents availability.
+2. In GetMonitor, create an HTTP monitor for the deployed URL. Use a 2xx expected response and a timeout appropriate for the service.
+3. Add at least one alert integration (email, Slack, SMS, Discord, Telegram, or webhook), then test it.
+4. Create a public or private status page and add the monitor as a component.
+
+For local development, the app is typically available at \`${localTarget}\`, but GetMonitor requires a public URL. See the [GetMonitor documentation](https://getmonitor.io/docs/getting-started/introduction/) for monitor, alert, incident, maintenance, and status-page configuration.
+`;
+}
+
 function generateProjectStructure(config: ProjectConfig): string {
-  const { projectName, frontend, backend, addons, api, auth, database, orm } = config;
+  const { projectName, frontend, backend, addons, api, auth, database, orm, payments } = config;
   const isConvex = backend === "convex";
   const structure: string[] = [`${projectName}/`, "├── apps/"];
   const hasAppWebFrontend = hasWebFrontend(frontend);
@@ -434,7 +506,14 @@ function generateProjectStructure(config: ProjectConfig): string {
         structure.push("│   ├── auth/        # Authentication configuration & logic");
       }
       if (hasDbPackage) {
-        structure.push("│   └── db/          # Database schema & queries");
+        structure.push(
+          payments === "abacatepay"
+            ? "│   ├── db/          # Database schema & queries"
+            : "│   └── db/          # Database schema & queries",
+        );
+      }
+      if (payments === "abacatepay") {
+        structure.push("│   └── payments/    # AbacatePay runtime and webhook helpers");
       }
     }
   }
@@ -445,6 +524,8 @@ function generateProjectStructure(config: ProjectConfig): string {
 function generateFeaturesList(
   database: ProjectConfig["database"],
   auth: ProjectConfig["auth"],
+  payments: ProjectConfig["payments"],
+  observability: ProjectConfig["observability"],
   addons: ProjectConfig["addons"],
   orm: ProjectConfig["orm"],
   runtime: ProjectConfig["runtime"],
@@ -462,6 +543,10 @@ function generateFeaturesList(
   const usesTailwind = hasAppWebFrontend || frontend.includes("native-uniwind");
 
   const features = ["- **TypeScript** - For type safety and improved developer experience"];
+
+  if (observability === "getmonitor") {
+    features.push("- **GetMonitor** - Uptime monitoring, alerts, and hosted status pages");
+  }
 
   const frontendFeatures: Record<string, string> = {
     "tanstack-router": "- **TanStack Router** - File-based routing with full type safety",
@@ -540,6 +625,10 @@ function generateFeaturesList(
   if (auth !== "none") {
     const authLabel = auth === "clerk" ? "Clerk" : "Better-Auth";
     features.push(`- **Authentication** - ${authLabel}`);
+  }
+
+  if (payments === "abacatepay") {
+    features.push("- **AbacatePay** - Hosted checkout with webhook-driven payment reconciliation");
   }
 
   const addonFeatures: Record<string, string> = {
@@ -782,6 +871,19 @@ function generateScriptsList(
 - \`${packageManagerRunCmd} ${v.deployCheck}\`: Dry-run a deploy to preview framework detection and included files without uploading`;
   }
 
+  if (webDeploy === "guaracloud" || serverDeploy === "guaracloud") {
+    const scriptSets = getGuaraCloudScriptSets(webDeploy, serverDeploy);
+    scripts += `\n- \`${packageManagerRunCmd} deploy:login\`: Authenticate the Guara Cloud CLI`;
+    for (const g of scriptSets) {
+      const label = g.target === "web" ? "web service" : "server service";
+      scripts += `\n- \`${packageManagerRunCmd} ${g.link}\`: Link the ${label} directory to Guara Cloud
+- \`${packageManagerRunCmd} ${g.deploy}\`: Trigger a deployment on Guara Cloud for the ${label}
+- \`${packageManagerRunCmd} ${g.logs}\`: Stream runtime logs for the ${label}
+- \`${packageManagerRunCmd} ${g.buildLogs}\`: Stream build logs for the ${label}
+- \`${packageManagerRunCmd} ${g.rollback}\`: Roll back the ${label} deployment`;
+    }
+  }
+
   return scripts;
 }
 
@@ -794,8 +896,9 @@ function generateDeploymentCommands(
   const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
   const hasDocker = webDeploy === "docker" || serverDeploy === "docker";
   const hasVercel = webDeploy === "vercel" || serverDeploy === "vercel";
+  const hasGuaraCloud = webDeploy === "guaracloud" || serverDeploy === "guaracloud";
 
-  if (!hasCloudflare && !hasDocker && !hasVercel) {
+  if (!hasCloudflare && !hasDocker && !hasVercel && !hasGuaraCloud) {
     return "";
   }
 
@@ -890,6 +993,43 @@ function generateDeploymentCommands(
     );
   }
 
+  if (hasGuaraCloud) {
+    const scriptSets = getGuaraCloudScriptSets(webDeploy, serverDeploy);
+    const targetLabel =
+      webDeploy === "guaracloud" && (serverDeploy === "guaracloud" || backend === "self")
+        ? "web + server"
+        : webDeploy === "guaracloud"
+          ? "web"
+          : "server";
+
+    lines.push(
+      "",
+      "### Guara Cloud",
+      "",
+      `- Target: ${targetLabel}`,
+      "- Build source: app Dockerfiles in `apps/*/Dockerfile`",
+      `- Login: ${packageManagerRunCmd} deploy:login`,
+      "- One Guara service should be linked per app directory in this monorepo.",
+      "",
+      "Guara Cloud supports GitHub-connected monorepos and Docker-based deployments. Configure each service to build from its app directory, set environment variables in Guara Cloud (or via `guara env`), and attach custom domains after the first deploy.",
+      "",
+      "Docs referenced during integration: Introduction, Quickstart, Concepts, Pricing, Creating Services, Environment Variables, Service Scaling, Storage Volumes, Build Configuration, Health Checks, Managing Services, Deployments Overview, Service Domains, Guara CLI, Supported Technologies, Deploying from GitHub, and Deploying with Docker.",
+    );
+
+    for (const g of scriptSets) {
+      const label = g.target === "web" ? "Web" : "Server";
+      const appDir = g.target === "web" ? "apps/web" : "apps/server";
+      lines.push(
+        `- ${label} link: ${packageManagerRunCmd} ${g.link}`,
+        `- ${label} deploy: ${packageManagerRunCmd} ${g.deploy}`,
+        `- ${label} runtime logs: ${packageManagerRunCmd} ${g.logs}`,
+        `- ${label} build logs: ${packageManagerRunCmd} ${g.buildLogs}`,
+        `- ${label} roll back: ${packageManagerRunCmd} ${g.rollback}`,
+        `- Start by linking from \`${appDir}\` so Guara stores service metadata beside the app it deploys.`,
+      );
+    }
+  }
+
   return `${lines.join("\n")}\n`;
 }
 
@@ -931,7 +1071,7 @@ function getVercelScriptNames(
   webDeploy: ProjectConfig["webDeploy"] | undefined,
   serverDeploy: ProjectConfig["serverDeploy"] | undefined,
 ) {
-  const mixedCloud = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  const mixedCloud = webDeploy !== "none" && serverDeploy !== "none" && webDeploy !== serverDeploy;
   const target = webDeploy === "vercel" ? "web" : "server";
   const deploy = mixedCloud ? `deploy:${target}` : "deploy";
   return {
@@ -942,4 +1082,55 @@ function getVercelScriptNames(
     deployProd: `${deploy}:prod`,
     deployCheck: "deploy:check",
   };
+}
+
+function getGuaraCloudScriptNames(
+  webDeploy: ProjectConfig["webDeploy"] | undefined,
+  serverDeploy: ProjectConfig["serverDeploy"] | undefined,
+) {
+  const splitTargets =
+    (webDeploy !== "none" && serverDeploy !== "none" && webDeploy !== serverDeploy) ||
+    (webDeploy === "guaracloud" && serverDeploy === "guaracloud");
+  const target = webDeploy === "guaracloud" ? "web" : "server";
+  const deploy = splitTargets ? `deploy:${target}` : "deploy";
+  return {
+    deploy,
+    link: `${deploy}:link`,
+    logs: `${deploy}:logs`,
+    buildLogs: `${deploy}:build-logs`,
+    rollback: splitTargets ? `rollback:${target}` : "rollback",
+  };
+}
+
+function getGuaraCloudScriptSets(
+  webDeploy: ProjectConfig["webDeploy"] | undefined,
+  serverDeploy: ProjectConfig["serverDeploy"] | undefined,
+) {
+  if (webDeploy === "guaracloud" && serverDeploy === "guaracloud") {
+    return [
+      {
+        target: "web" as const,
+        deploy: "deploy:web",
+        link: "deploy:web:link",
+        logs: "deploy:web:logs",
+        buildLogs: "deploy:web:build-logs",
+        rollback: "rollback:web",
+      },
+      {
+        target: "server" as const,
+        deploy: "deploy:server",
+        link: "deploy:server:link",
+        logs: "deploy:server:logs",
+        buildLogs: "deploy:server:build-logs",
+        rollback: "rollback:server",
+      },
+    ];
+  }
+
+  return [
+    {
+      target: webDeploy === "guaracloud" ? ("web" as const) : ("server" as const),
+      ...getGuaraCloudScriptNames(webDeploy, serverDeploy),
+    },
+  ];
 }

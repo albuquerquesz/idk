@@ -1,7 +1,7 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
-import { type TemplateData, processTemplatesFromPrefix } from "./utils";
+import { type TemplateData, processSingleTemplate, processTemplatesFromPrefix } from "./utils";
 
 export async function processPaymentsTemplates(
   vfs: VirtualFileSystem,
@@ -10,12 +10,35 @@ export async function processPaymentsTemplates(
 ): Promise<void> {
   if (!config.payments || config.payments === "none") return;
 
+  processSingleTemplate(
+    vfs,
+    templates,
+    "packages/payments/package.json",
+    "packages/payments/package.json",
+    config,
+  );
+  processSingleTemplate(
+    vfs,
+    templates,
+    "packages/payments/tsconfig.json",
+    "packages/payments/tsconfig.json",
+    config,
+  );
+  processSingleTemplate(
+    vfs,
+    templates,
+    "packages/payments/src/index.ts",
+    "packages/payments/src/index.ts",
+    config,
+  );
+
   const hasReactWeb = config.frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
   );
   const hasNuxtWeb = config.frontend.includes("nuxt");
   const hasSvelteWeb = config.frontend.includes("svelte");
   const hasSolidWeb = config.frontend.includes("solid");
+  const hasAstroWeb = config.frontend.includes("astro");
 
   if (config.backend === "convex") {
     processTemplatesFromPrefix(
@@ -31,9 +54,47 @@ export async function processPaymentsTemplates(
       vfs,
       templates,
       `payments/${config.payments}/server/base`,
-      "packages/auth",
+      "packages/payments",
       config,
     );
+
+    if (
+      config.payments === "abacatepay" &&
+      config.orm !== "none" &&
+      config.database !== "none" &&
+      config.database !== "mongodb"
+    ) {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `payments/${config.payments}/db/${config.orm}/${config.database}`,
+        "packages/db",
+        config,
+      );
+    }
+  } else if (config.payments === "abacatepay") {
+    processTemplatesFromPrefix(
+      vfs,
+      templates,
+      `payments/${config.payments}/server/base`,
+      "packages/payments",
+      config,
+    );
+  }
+
+  if (config.payments === "abacatepay" && config.backend === "self") {
+    const fullstackFramework = config.frontend.find((f) =>
+      ["next", "tanstack-start", "nuxt", "svelte", "astro"].includes(f),
+    );
+    if (fullstackFramework) {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `payments/${config.payments}/fullstack/${fullstackFramework}`,
+        "apps/web",
+        config,
+      );
+    }
   }
 
   if (hasReactWeb) {
@@ -70,6 +131,14 @@ export async function processPaymentsTemplates(
       vfs,
       templates,
       `payments/${config.payments}/web/solid`,
+      "apps/web",
+      config,
+    );
+  } else if (hasAstroWeb) {
+    processTemplatesFromPrefix(
+      vfs,
+      templates,
+      `payments/${config.payments}/web/astro`,
       "apps/web",
       config,
     );

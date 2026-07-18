@@ -36,12 +36,14 @@ const sampleTimeoutMs = readPositiveIntEnv("BTS_BUILD_SAMPLE_TIMEOUT_MS", 1_500_
 type BuildSample = {
   name: string;
   packageManagers?: readonly PackageManager[];
+  env?: Record<string, string>;
   config: Omit<CreateInput, "packageManager" | "projectName">;
 };
 
 type SelectedBuildSample = {
   name: string;
   packageManager: PackageManager;
+  env?: Record<string, string>;
   config: Omit<CreateInput, "projectName">;
 };
 
@@ -171,6 +173,31 @@ const buildSamples: BuildSample[] = [
       examples: [],
     },
   },
+  {
+    name: "next-self-abacatepay",
+    env: {
+      DATABASE_URL: "file:../../local.db",
+      ABACATEPAY_API_KEY: "test_key",
+      ABACATEPAY_WEBHOOK_SECRET: "whsec_test",
+      ABACATEPAY_PUBLIC_KEY: "pub_test",
+      ABACATEPAY_RETURN_URL: "http://localhost:3001/dashboard",
+      ABACATEPAY_COMPLETION_URL: "http://localhost:3001/success",
+      CORS_ORIGIN: "http://localhost:3001",
+    },
+    config: {
+      ...baseConfig,
+      frontend: ["next"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "none",
+      auth: "none",
+      payments: "abacatepay",
+      addons: ["turborepo"],
+      examples: [],
+    },
+  },
 ];
 
 function expandBuildSample(sample: BuildSample): SelectedBuildSample[] {
@@ -178,6 +205,7 @@ function expandBuildSample(sample: BuildSample): SelectedBuildSample[] {
   return packageManagers.map((packageManager) => ({
     name: packageManagers.length > 1 ? `${sample.name}-${packageManager}` : sample.name,
     packageManager,
+    env: sample.env,
     config: {
       ...sample.config,
       packageManager,
@@ -204,7 +232,13 @@ function formatOutput(output: string | undefined) {
   return `${head}\n\n... [${output.length - 7_000} chars omitted] ...\n\n${tail}`;
 }
 
-async function runCommand(sampleName: string, projectDir: string, command: string, args: string[]) {
+async function runCommand(
+  sampleName: string,
+  projectDir: string,
+  command: string,
+  args: string[],
+  envOverrides?: Record<string, string>,
+) {
   const commandLabel = [command, ...args].join(" ");
   const startedAt = Date.now();
   let progressInterval: ReturnType<typeof setInterval> | undefined;
@@ -236,6 +270,7 @@ async function runCommand(sampleName: string, projectDir: string, command: strin
       timeout: commandTimeoutMs,
       env: {
         ...process.env,
+        ...envOverrides,
         CI: "1",
         BTS_TELEMETRY: "0",
         NEXT_TELEMETRY_DISABLED: "1",
@@ -291,7 +326,7 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
 
         for (const script of ["install", "build", "check-types"] as const) {
           const { command, args } = getPackageManagerCommand(sample.packageManager, script);
-          await runCommand(sample.name, projectDir, command, args);
+          await runCommand(sample.name, projectDir, command, args, sample.env);
         }
       },
       sampleTimeoutMs,

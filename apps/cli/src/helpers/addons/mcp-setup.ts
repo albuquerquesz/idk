@@ -251,10 +251,6 @@ export function getRecommendedMcpServers(
     recommendedServerKeys.push("expo");
   }
 
-  if (config.payments === "polar") {
-    recommendedServerKeys.push("polar");
-  }
-
   return uniqueValues(recommendedServerKeys)
     .map((serverKey) => serversByKey.get(serverKey))
     .filter((server): server is McpServerDef => server !== undefined);

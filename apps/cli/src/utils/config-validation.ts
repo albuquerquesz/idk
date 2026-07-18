@@ -14,6 +14,7 @@ import {
   validateSelfBackendCompatibility,
   validateDockerServerDeploy,
   validateDockerWebDeployDesktopAddons,
+  validateGuaraCloudServerDeploy,
   validateServerDeployRequiresBackend,
   validateVercelServerDeploy,
   validateWebDeployRequiresWebFrontend,
@@ -504,6 +505,7 @@ export function validateFullConfig(
     yield* validateServerDeployRequiresBackend(config.serverDeploy, config.backend);
     yield* validateDockerServerDeploy(config.serverDeploy, config.backend, config.runtime);
     yield* validateVercelServerDeploy(config.serverDeploy, config.backend, config.runtime);
+    yield* validateGuaraCloudServerDeploy(config.serverDeploy, config.backend, config.runtime);
     yield* validateDockerWebDeployDesktopAddons(
       config.webDeploy,
       config.addons,
@@ -555,6 +557,8 @@ export function validateFullConfig(
       config.auth,
       config.backend,
       config.frontend ?? [],
+      config.orm,
+      config.database,
     );
 
     return Result.ok(undefined);
@@ -576,6 +580,8 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
       config.auth,
       config.backend,
       config.frontend,
+      config.orm,
+      config.database,
     );
 
     if (config.addons && config.addons.length > 0) {

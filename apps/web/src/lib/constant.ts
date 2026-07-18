@@ -418,6 +418,13 @@ export const TECH_OPTIONS: Record<
       color: "from-gray-700 to-black",
     },
     {
+      id: "guaracloud",
+      name: "Guara Cloud",
+      description: "Deploy containers to Guara Cloud with per-app services",
+      icon: "",
+      color: "from-emerald-500 to-teal-700",
+    },
+    {
       id: "none",
       name: "None",
       description: "Skip deployment setup",
@@ -447,6 +454,13 @@ export const TECH_OPTIONS: Record<
       description: "Deploy to Vercel with Services",
       icon: `${ICON_BASE_URL}/vercel.svg`,
       color: "from-gray-700 to-black",
+    },
+    {
+      id: "guaracloud",
+      name: "Guara Cloud",
+      description: "Deploy containers to Guara Cloud with per-app services",
+      icon: "",
+      color: "from-emerald-500 to-teal-700",
     },
     {
       id: "none",
@@ -489,6 +503,30 @@ export const TECH_OPTIONS: Record<
       icon: "",
       color: "from-gray-400 to-gray-600",
       default: true,
+    },
+    {
+      id: "abacatepay",
+      name: "AbacatePay",
+      description: "Hosted checkout + webhook flow for Brazilian payments",
+      icon: "",
+      color: "from-emerald-400 to-lime-600",
+    },
+  ],
+  observability: [
+    {
+      id: "none",
+      name: "No Observability",
+      description: "Skip observability setup guidance",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+    {
+      id: "getmonitor",
+      name: "GetMonitor",
+      description: "Uptime monitoring, alerts, and hosted status pages",
+      icon: "",
+      color: "from-sky-400 to-blue-700",
     },
   ],
   packageManager: [
@@ -733,6 +771,7 @@ export const PRESET_TEMPLATES = [
       dbSetup: "mongodb-atlas",
       auth: "better-auth",
       payments: "none",
+      observability: "none",
       packageManager: "bun",
       addons: ["turborepo"],
       examples: ["todo"],
@@ -759,6 +798,7 @@ export const PRESET_TEMPLATES = [
       dbSetup: "none",
       auth: "better-auth",
       payments: "none",
+      observability: "none",
       packageManager: "bun",
       addons: ["turborepo"],
       examples: ["todo"],
@@ -785,6 +825,7 @@ export const PRESET_TEMPLATES = [
       dbSetup: "none",
       auth: "better-auth",
       payments: "none",
+      observability: "none",
       packageManager: "bun",
       addons: ["biome", "turborepo"],
       examples: ["none"],
@@ -811,6 +852,7 @@ export const PRESET_TEMPLATES = [
       dbSetup: "none",
       auth: "none",
       payments: "none",
+      observability: "none",
       packageManager: "bun",
       addons: ["none"],
       examples: ["none"],
@@ -835,6 +877,7 @@ export type StackState = {
   dbSetup: string;
   auth: string;
   payments: string;
+  observability: string;
   packageManager: string;
   addons: string[];
   examples: string[];
@@ -857,6 +900,7 @@ export const DEFAULT_STACK: StackState = {
   dbSetup: "none",
   auth: "better-auth",
   payments: "none",
+  observability: "none",
   packageManager: "bun",
   addons: ["turborepo"],
   examples: ["none"],

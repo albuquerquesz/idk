@@ -194,6 +194,319 @@ describe("Authentication Configurations", () => {
       expect(guardIndex).toBeLessThan(paymentIndex);
     });
 
+    it("should scaffold Hono + Next + Drizzle with AbacatePay payments", async () => {
+      const result = await runTRPCTest({
+        projectName: "better-auth-hono-next-abacatepay",
+        auth: "better-auth",
+        payments: "abacatepay",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) throw new Error("Expected projectDir to be defined");
+
+      const projectDir = result.projectDir;
+      const dashboardFile = await fs.readFile(
+        path.join(projectDir, "apps/web/src/app/dashboard/dashboard.tsx"),
+        "utf8",
+      );
+      const successPageFile = await fs.readFile(
+        path.join(projectDir, "apps/web/src/app/success/page.tsx"),
+        "utf8",
+      );
+      const serverFile = await fs.readFile(
+        path.join(projectDir, "apps/server/src/index.ts"),
+        "utf8",
+      );
+      const envFile = await fs.readFile(path.join(projectDir, "apps/server/.env"), "utf8");
+      const paymentsHelperFile = await fs.readFile(
+        path.join(projectDir, "packages/payments/src/lib/abacatepay.ts"),
+        "utf8",
+      );
+      const dbSchemaFile = await fs.readFile(
+        path.join(projectDir, "packages/db/src/schema/abacatepay.ts"),
+        "utf8",
+      );
+
+      expect(dashboardFile).toContain("Open Checkout");
+      expect(dashboardFile).toContain("api/payments/abacatepay/checkout");
+      expect(successPageFile).toContain("Checkout Status");
+      expect(successPageFile).toContain("api/payments/abacatepay/checkout");
+      expect(serverFile).toContain("/api/payments/abacatepay/checkout");
+      expect(serverFile).toContain("/api/payments/abacatepay/webhook");
+      expect(serverFile).toContain("X-Webhook-Signature");
+      expect(serverFile).toContain("webhookSecret");
+      expect(paymentsHelperFile).toContain("https://api.abacatepay.com/v2");
+      expect(paymentsHelperFile).toContain("verifyAbacatePayWebhookSignature");
+      expect(paymentsHelperFile).toContain("timingSafeEqual");
+      expect(paymentsHelperFile).toContain("customerEmail");
+      expect(dbSchemaFile).toContain("abacatepay_checkout");
+      expect(dbSchemaFile).toContain("event_id");
+      expect(dbSchemaFile).toContain('customerEmail: text("customer_email")');
+      expect(envFile).toContain("ABACATEPAY_API_KEY=");
+      expect(envFile).toContain("ABACATEPAY_WEBHOOK_SECRET=");
+      expect(envFile).toContain("ABACATEPAY_PUBLIC_KEY=");
+      expect(envFile).toContain("ABACATEPAY_RETURN_URL=http://localhost:3001/dashboard");
+      expect(envFile).toContain("ABACATEPAY_COMPLETION_URL=http://localhost:3001/success");
+    });
+
+    it("should declare AbacatePay env passthrough in turbo build tasks", async () => {
+      const result = await runTRPCTest({
+        projectName: "abacatepay-turbo-env",
+        auth: "none",
+        payments: "abacatepay",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "none",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) throw new Error("Expected projectDir to be defined");
+
+      const turboJson = await fs.readJson(path.join(result.projectDir, "turbo.json"));
+
+      expect(turboJson.tasks.build.env).toContain("ABACATEPAY_API_KEY");
+      expect(turboJson.tasks.build.env).toContain("ABACATEPAY_WEBHOOK_SECRET");
+      expect(turboJson.tasks.build.env).toContain("ABACATEPAY_PUBLIC_KEY");
+      expect(turboJson.tasks.build.env).toContain("ABACATEPAY_RETURN_URL");
+      expect(turboJson.tasks.build.env).toContain("ABACATEPAY_COMPLETION_URL");
+      expect(turboJson.tasks.build.env).toContain("DATABASE_URL");
+      expect(turboJson.tasks.build.env).toContain("CORS_ORIGIN");
+    });
+
+    it("should scaffold Self + TanStack Start + Prisma with AbacatePay payments", async () => {
+      const result = await runTRPCTest({
+        projectName: "better-auth-self-tanstack-start-abacatepay",
+        auth: "better-auth",
+        payments: "abacatepay",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "prisma",
+        api: "orpc",
+        frontend: ["tanstack-start"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) throw new Error("Expected projectDir to be defined");
+
+      const projectDir = result.projectDir;
+      const dashboardFile = await fs.readFile(
+        path.join(projectDir, "apps/web/src/routes/_auth/dashboard.tsx"),
+        "utf8",
+      );
+      const checkoutRouteFile = await fs.readFile(
+        path.join(projectDir, "apps/web/src/routes/api/payments/abacatepay/checkout.ts"),
+        "utf8",
+      );
+      const webhookRouteFile = await fs.readFile(
+        path.join(projectDir, "apps/web/src/routes/api/payments/abacatepay/webhook.ts"),
+        "utf8",
+      );
+      const statusRouteFile = await fs.readFile(
+        path.join(
+          projectDir,
+          "apps/web/src/routes/api/payments/abacatepay/checkout/$checkoutId.ts",
+        ),
+        "utf8",
+      );
+      const prismaModelFile = await fs.readFile(
+        path.join(projectDir, "packages/db/prisma/schema/abacatepay.prisma"),
+        "utf8",
+      );
+
+      expect(dashboardFile).toContain("Open Checkout");
+      expect(checkoutRouteFile).toContain('createFileRoute("/api/payments/abacatepay/checkout")');
+      expect(checkoutRouteFile).toContain("/payments/lib/abacatepay");
+      expect(webhookRouteFile).toContain("X-Webhook-Signature");
+      expect(webhookRouteFile).toContain("webhookSecret");
+      expect(statusRouteFile).toContain("getStoredAbacatePayCheckout");
+      expect(prismaModelFile).toContain("model AbacatePayCheckout");
+      expect(prismaModelFile).toContain("model AbacatePayWebhookEvent");
+      expect(prismaModelFile).toContain("customerEmail");
+    });
+
+    it("should scaffold Self + Nuxt + Drizzle with AbacatePay payments", async () => {
+      const result = await runTRPCTest({
+        projectName: "better-auth-self-nuxt-abacatepay",
+        auth: "better-auth",
+        payments: "abacatepay",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        api: "orpc",
+        frontend: ["nuxt"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) throw new Error("Expected projectDir to be defined");
+
+      const projectDir = result.projectDir;
+      const dashboardFile = await fs.readFile(
+        path.join(projectDir, "apps/web/app/pages/dashboard.vue"),
+        "utf8",
+      );
+      const successPageFile = await fs.readFile(
+        path.join(projectDir, "apps/web/app/pages/success.vue"),
+        "utf8",
+      );
+      const checkoutRouteFile = await fs.readFile(
+        path.join(projectDir, "apps/web/server/api/payments/abacatepay/checkout.post.ts"),
+        "utf8",
+      );
+      const webhookRouteFile = await fs.readFile(
+        path.join(projectDir, "apps/web/server/api/payments/abacatepay/webhook.post.ts"),
+        "utf8",
+      );
+      const statusRouteFile = await fs.readFile(
+        path.join(
+          projectDir,
+          "apps/web/server/api/payments/abacatepay/checkout/[checkoutId].get.ts",
+        ),
+        "utf8",
+      );
+
+      expect(dashboardFile).toContain("Open Checkout");
+      expect(dashboardFile).toContain('const baseUrl = ""');
+      expect(successPageFile).toContain("Checkout Status");
+      expect(checkoutRouteFile).toContain("createAbacatePayHostedCheckout");
+      expect(webhookRouteFile).toContain("X-Webhook-Signature");
+      expect(webhookRouteFile).toContain("webhookSecret");
+      expect(statusRouteFile).toContain("getStoredAbacatePayCheckout");
+    });
+
+    it("should scaffold auth none + Hono + Next + Drizzle with guest-capable AbacatePay", async () => {
+      const result = await runTRPCTest({
+        projectName: "auth-none-hono-next-abacatepay",
+        auth: "none",
+        payments: "abacatepay",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) throw new Error("Expected projectDir to be defined");
+
+      const projectDir = result.projectDir;
+      const homeFile = await fs.readFile(
+        path.join(projectDir, "apps/web/src/app/page.tsx"),
+        "utf8",
+      );
+      const serverFile = await fs.readFile(
+        path.join(projectDir, "apps/server/src/index.ts"),
+        "utf8",
+      );
+      const paymentsHelperFile = await fs.readFile(
+        path.join(projectDir, "packages/payments/src/lib/abacatepay.ts"),
+        "utf8",
+      );
+      const dbSchemaFile = await fs.readFile(
+        path.join(projectDir, "packages/db/src/schema/abacatepay.ts"),
+        "utf8",
+      );
+
+      expect(homeFile).toContain("Hosted Checkout");
+      expect(serverFile).toContain("/payments/lib/abacatepay");
+      expect(serverFile).not.toContain("/auth/lib/abacatepay");
+      expect(serverFile).not.toContain("auth.api.getSession");
+      expect(paymentsHelperFile).toContain("createAbacatePayHostedCheckout(identity");
+      expect(paymentsHelperFile).toContain("customerEmail");
+      expect(dbSchemaFile).toContain('userId: text("user_id")');
+      expect(dbSchemaFile).toContain('customerEmail: text("customer_email")');
+    });
+
+    it("should scaffold Clerk + self + TanStack Start + Prisma with auth-free payment routes", async () => {
+      const result = await runTRPCTest({
+        projectName: "clerk-self-tanstack-start-abacatepay",
+        auth: "clerk",
+        payments: "abacatepay",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "prisma",
+        api: "orpc",
+        frontend: ["tanstack-start"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) throw new Error("Expected projectDir to be defined");
+
+      const projectDir = result.projectDir;
+      const homeFile = await fs.readFile(
+        path.join(projectDir, "apps/web/src/routes/index.tsx"),
+        "utf8",
+      );
+      const checkoutRouteFile = await fs.readFile(
+        path.join(projectDir, "apps/web/src/routes/api/payments/abacatepay/checkout.ts"),
+        "utf8",
+      );
+      const paymentsPackageFile = await fs.readFile(
+        path.join(projectDir, "packages/payments/package.json"),
+        "utf8",
+      );
+      const prismaModelFile = await fs.readFile(
+        path.join(projectDir, "packages/db/prisma/schema/abacatepay.prisma"),
+        "utf8",
+      );
+
+      expect(homeFile).toContain("Hosted Checkout");
+      expect(checkoutRouteFile).toContain("/payments/lib/abacatepay");
+      expect(checkoutRouteFile).not.toContain("/auth");
+      expect(checkoutRouteFile).toContain("createAbacatePayHostedCheckout()");
+      expect(paymentsPackageFile).toContain("@clerk-self-tanstack-start-abacatepay/payments");
+      expect(prismaModelFile).toContain("userId               String?");
+      expect(prismaModelFile).toContain("customerEmail        String?");
+    });
+
     it("should work with better-auth + convex backend (tanstack-router)", async () => {
       const result = await runTRPCTest({
         projectName: "better-auth-convex-success",

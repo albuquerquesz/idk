@@ -2,8 +2,8 @@
 {{#if (eq api "orpc")}}
 import { useQuery } from '@tanstack/vue-query'
 {{/if}}
-
 const { $authClient, $orpc } = useNuxtApp()
+const runtimeConfig = useRuntimeConfig()
 
 definePageMeta({
   middleware: ['auth']
@@ -33,6 +33,19 @@ onMounted(async () => {
 const hasProSubscription = computed(() => 
   (customerState.value?.activeSubscriptions?.length ?? 0) > 0
 )
+{{else if (eq payments "abacatepay")}}
+const openCheckout = async () => {
+  const baseUrl = {{#if (eq backend "self")}}""{{else}}runtimeConfig.public.serverUrl{{/if}}
+  const response = await fetch(`${baseUrl}/api/payments/abacatepay/checkout`, {
+    method: 'POST',
+  })
+  if (!response.ok) return
+
+  const payload = (await response.json()) as { data?: { url?: string } }
+  if (payload.data?.url) {
+    window.location.href = payload.data.url
+  }
+}
 {{/if}}
 </script>
 
@@ -90,6 +103,19 @@ const hasProSubscription = computed(() =>
             @click="() => { $authClient.checkout({ slug: 'pro' }) }"
           >
             Upgrade to Pro
+          </UButton>
+        </div>
+      </UCard>
+      {{else if (eq payments "abacatepay")}}
+      <UCard>
+        <template #header>
+          <div class="font-medium">Checkout</div>
+        </template>
+
+        <div class="flex items-center justify-between gap-4">
+          <p class="text-sm text-muted">Open the hosted checkout to complete payment.</p>
+          <UButton @click="openCheckout">
+            Open Checkout
           </UButton>
         </div>
       </UCard>

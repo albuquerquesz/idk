@@ -23,6 +23,7 @@ export const DEFAULT_CONFIG_BASE = {
   orm: "drizzle",
   auth: "better-auth",
   payments: "none",
+  observability: "none",
   addons: ["turborepo"],
   examples: [],
   git: true,

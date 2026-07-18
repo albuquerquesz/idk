@@ -13,6 +13,7 @@ import {
   APISchema,
   AuthSchema,
   PaymentsSchema,
+  ObservabilitySchema,
   WebDeploySchema,
   ServerDeploySchema,
   DirectoryConflictSchema,
@@ -74,6 +75,10 @@ export function getAuthJsonSchema() {
 
 export function getPaymentsJsonSchema() {
   return z.toJSONSchema(PaymentsSchema);
+}
+
+export function getObservabilityJsonSchema() {
+  return z.toJSONSchema(ObservabilitySchema);
 }
 
 export function getWebDeployJsonSchema() {
@@ -139,6 +144,7 @@ export function getAllJsonSchemas() {
     api: getAPIJsonSchema(),
     auth: getAuthJsonSchema(),
     payments: getPaymentsJsonSchema(),
+    observability: getObservabilityJsonSchema(),
     webDeploy: getWebDeployJsonSchema(),
     serverDeploy: getServerDeployJsonSchema(),
     directoryConflict: getDirectoryConflictJsonSchema(),

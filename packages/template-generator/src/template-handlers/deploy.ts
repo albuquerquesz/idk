@@ -40,10 +40,14 @@ export async function processDeployTemplates(
 
     for (const f of config.frontend) {
       if (templateMap[f]) {
+        const webTemplateRoot =
+          config.webDeploy === "guaracloud"
+            ? "deploy/docker/web"
+            : `deploy/${config.webDeploy}/web`;
         processTemplatesFromPrefix(
           vfs,
           templates,
-          `deploy/${config.webDeploy}/web/${templateMap[f]}`,
+          `${webTemplateRoot}/${templateMap[f]}`,
           "apps/web",
           config,
         );
@@ -57,12 +61,10 @@ export async function processDeployTemplates(
     config.serverDeploy !== "vercel" &&
     !isBackendSelf
   ) {
-    processTemplatesFromPrefix(
-      vfs,
-      templates,
-      `deploy/${config.serverDeploy}/server`,
-      "apps/server",
-      config,
-    );
+    const serverTemplateRoot =
+      config.serverDeploy === "guaracloud"
+        ? "deploy/docker/server"
+        : `deploy/${config.serverDeploy}/server`;
+    processTemplatesFromPrefix(vfs, templates, serverTemplateRoot, "apps/server", config);
   }
 }

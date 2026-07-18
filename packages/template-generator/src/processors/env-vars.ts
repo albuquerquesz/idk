@@ -405,7 +405,7 @@ function buildServerVars(
   runtime: ProjectConfig["runtime"],
   webDeploy: ProjectConfig["webDeploy"],
   serverDeploy: ProjectConfig["serverDeploy"],
-  _payments: ProjectConfig["payments"],
+  payments: ProjectConfig["payments"],
   examples: ProjectConfig["examples"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
@@ -455,6 +455,15 @@ function buildServerVars(
     (["express", "fastify"].includes(backend) ||
       (api !== "none" && ["self", "hono", "elysia"].includes(backend)));
 
+  const abacatePayBaseUrl =
+    backend === "self"
+      ? hasSvelte
+        ? "http://localhost:5173"
+        : hasAstro
+          ? "http://localhost:4321"
+          : "http://localhost:3001"
+      : corsOrigin;
+
   return [
     {
       key: "BETTER_AUTH_SECRET",
@@ -490,6 +499,31 @@ function buildServerVars(
       key: "DATABASE_URL",
       value: databaseUrl,
       condition: database !== "none" && dbSetup === "none",
+    },
+    {
+      key: "ABACATEPAY_API_KEY",
+      value: "",
+      condition: payments === "abacatepay",
+    },
+    {
+      key: "ABACATEPAY_WEBHOOK_SECRET",
+      value: "",
+      condition: payments === "abacatepay",
+    },
+    {
+      key: "ABACATEPAY_PUBLIC_KEY",
+      value: "",
+      condition: payments === "abacatepay",
+    },
+    {
+      key: "ABACATEPAY_RETURN_URL",
+      value: `${abacatePayBaseUrl}/dashboard`,
+      condition: payments === "abacatepay",
+    },
+    {
+      key: "ABACATEPAY_COMPLETION_URL",
+      value: `${abacatePayBaseUrl}/success`,
+      condition: payments === "abacatepay",
     },
   ];
 }

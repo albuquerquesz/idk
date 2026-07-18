@@ -30,7 +30,11 @@ export type MatrixRule =
   | "orm-mongoose-requires-mongodb"
   | "orm-mongodb-requires-mongoose-or-prisma"
   | "orm-requires-database"
-  | "payments-polar-requires-better-auth"
+  | "payments-abacatepay-requires-sql-persistence"
+  | "payments-abacatepay-requires-web-frontend"
+  | "payments-abacatepay-rejects-convex"
+  | "payments-abacatepay-rejects-mongodb"
+  | "payments-abacatepay-rejects-native-only"
   | "runtime-none-requires-terminal-backend"
   | "server-deploy-requires-backend"
   | "server-deploy-requires-workers-runtime"
@@ -303,8 +307,33 @@ function validatePayments(config: ProjectConfig, rules: Set<MatrixRule>) {
 
   addRule(
     rules,
-    config.payments === "polar" && config.auth !== "better-auth",
-    "payments-polar-requires-better-auth",
+    config.payments === "abacatepay" && config.backend === "convex",
+    "payments-abacatepay-rejects-convex",
+  );
+  addRule(
+    rules,
+    config.payments === "abacatepay" && !hasWebFrontend(config.frontend),
+    "payments-abacatepay-requires-web-frontend",
+  );
+  addRule(
+    rules,
+    config.payments === "abacatepay" &&
+      config.frontend.length > 0 &&
+      config.frontend.every((frontend) =>
+        ["native-bare", "native-uniwind", "native-unistyles"].includes(frontend),
+      ),
+    "payments-abacatepay-rejects-native-only",
+  );
+  addRule(
+    rules,
+    config.payments === "abacatepay" && (config.database === "none" || config.orm === "none"),
+    "payments-abacatepay-requires-sql-persistence",
+  );
+  addRule(
+    rules,
+    config.payments === "abacatepay" &&
+      (config.database === "mongodb" || config.orm === "mongoose"),
+    "payments-abacatepay-rejects-mongodb",
   );
 }
 
@@ -415,8 +444,23 @@ export function classifyMatrixError(message: string): MatrixRule | "unknown" {
     return "orm-mongodb-requires-mongoose-or-prisma";
   }
   if (message.includes("ORM selection requires a database")) return "orm-requires-database";
-  if (message.includes("Polar payments requires Better Auth")) {
-    return "payments-polar-requires-better-auth";
+  if (
+    message.includes("AbacatePay payments v1 requires a SQL database") &&
+    message.includes("cannot be 'none'")
+  ) {
+    return "payments-abacatepay-requires-sql-persistence";
+  }
+  if (message.includes("AbacatePay payments requires a web frontend")) {
+    return "payments-abacatepay-requires-web-frontend";
+  }
+  if (message.includes("AbacatePay payments is not compatible with '--backend convex'")) {
+    return "payments-abacatepay-rejects-convex";
+  }
+  if (message.includes("AbacatePay payments v1 requires a SQL database")) {
+    return "payments-abacatepay-rejects-mongodb";
+  }
+  if (message.includes("AbacatePay payments is not compatible with native-only frontends")) {
+    return "payments-abacatepay-rejects-native-only";
   }
   if (message.includes("'--runtime none' is only supported")) {
     return "runtime-none-requires-terminal-backend";

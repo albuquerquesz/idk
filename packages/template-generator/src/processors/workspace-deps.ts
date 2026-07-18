@@ -23,6 +23,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     infra: vfs.exists("packages/infra/package.json"),
     db: vfs.exists("packages/db/package.json"),
     auth: vfs.exists("packages/auth/package.json"),
+    payments: vfs.exists("packages/payments/package.json"),
     api: vfs.exists("packages/api/package.json"),
     ui: vfs.exists("packages/ui/package.json"),
     backend: vfs.exists("packages/backend/package.json"),
@@ -98,6 +99,21 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     });
   }
 
+  if (packages.payments) {
+    const paymentsDeps: Record<string, string> = { ...envDep };
+    if (database !== "none" && packages.db) {
+      paymentsDeps[`@${projectName}/db`] = workspaceVersion;
+    }
+    addPackageDependency({
+      vfs,
+      packagePath: "packages/payments/package.json",
+      dependencies: commonDeps,
+      devDependencies: ["typescript"],
+      customDependencies: paymentsDeps,
+      customDevDependencies: configDep,
+    });
+  }
+
   if (packages.api) {
     const apiPackageDeps: Record<string, string> = { ...envDep };
     if (auth !== "none" && packages.auth) {
@@ -131,6 +147,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     if (api !== "none" && packages.api) serverDeps[`@${projectName}/api`] = workspaceVersion;
     if (auth !== "none" && packages.auth) serverDeps[`@${projectName}/auth`] = workspaceVersion;
     if (database !== "none" && packages.db) serverDeps[`@${projectName}/db`] = workspaceVersion;
+    if (packages.payments) serverDeps[`@${projectName}/payments`] = workspaceVersion;
     addPackageDependency({
       vfs,
       packagePath: "apps/server/package.json",
@@ -147,6 +164,9 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     if (api !== "none" && packages.api) webPackageDeps[`@${projectName}/api`] = workspaceVersion;
     if (backend === "self" && auth !== "none" && packages.auth) {
       webPackageDeps[`@${projectName}/auth`] = workspaceVersion;
+    }
+    if (backend === "self" && packages.payments) {
+      webPackageDeps[`@${projectName}/payments`] = workspaceVersion;
     }
     if (backend === "convex" && packages.backend)
       webPackageDeps[`@${projectName}/backend`] = workspaceVersion;

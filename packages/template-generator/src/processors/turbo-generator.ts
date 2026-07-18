@@ -12,6 +12,7 @@ interface TurboTask {
   dependsOn?: string[];
   inputs?: string[];
   outputs?: string[];
+  env?: string[];
   cache?: boolean;
   persistent?: boolean;
 }
@@ -39,9 +40,11 @@ function generateTurboConfig(config: ProjectConfig): TurboConfig {
   const isSqliteLocal = database === "sqlite" && dbSetup !== "d1" && hasDatabase;
   const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
 
+  const buildEnv = getBuildEnv(config);
+
   const tasks: Record<string, TurboTask> = {
-    ...getBaseTasks(frontend, config.addons),
-    ...(config.addons.includes("electrobun") ? getElectrobunTasks() : {}),
+    ...getBaseTasks(frontend, config.addons, buildEnv),
+    ...(config.addons.includes("electrobun") ? getElectrobunTasks(buildEnv) : {}),
     ...(isConvex ? getConvexTasks() : {}),
     ...(!isConvex && hasDatabase ? getDatabaseTasks(dbSupport) : {}),
     ...(isDocker ? getDockerTasks() : {}),
@@ -56,7 +59,11 @@ function generateTurboConfig(config: ProjectConfig): TurboConfig {
   };
 }
 
-function getBaseTasks(frontend: string[], addons: string[]): Record<string, TurboTask> {
+function getBaseTasks(
+  frontend: string[],
+  addons: string[],
+  buildEnv: string[],
+): Record<string, TurboTask> {
   // Build outputs per framework:
   // - Vite-based (tanstack-router, react-router, tanstack-start, solid, svelte): dist/**
   // - Next.js: .next/** excluding .next/cache/**
@@ -90,6 +97,7 @@ function getBaseTasks(frontend: string[], addons: string[]): Record<string, Turb
       dependsOn: ["^build"],
       inputs: ["$TURBO_DEFAULT$", ".env*"],
       outputs: buildOutputs,
+      ...(buildEnv.length > 0 ? { env: buildEnv } : {}),
     },
     lint: {
       dependsOn: ["^lint"],
@@ -104,7 +112,7 @@ function getBaseTasks(frontend: string[], addons: string[]): Record<string, Turb
   };
 }
 
-function getElectrobunTasks(): Record<string, TurboTask> {
+function getElectrobunTasks(buildEnv: string[]): Record<string, TurboTask> {
   return {
     "dev:hmr": {
       cache: false,
@@ -114,13 +122,50 @@ function getElectrobunTasks(): Record<string, TurboTask> {
       dependsOn: ["^build"],
       inputs: ["$TURBO_DEFAULT$", ".env*"],
       outputs: ["artifacts/**", "build/**"],
+      ...(buildEnv.length > 0 ? { env: buildEnv } : {}),
     },
     "build:canary": {
       dependsOn: ["^build"],
       inputs: ["$TURBO_DEFAULT$", ".env*"],
       outputs: ["artifacts/**", "build/**"],
+      ...(buildEnv.length > 0 ? { env: buildEnv } : {}),
     },
   };
+}
+
+function getBuildEnv(config: ProjectConfig): string[] {
+  const buildEnv = new Set<string>();
+
+  if (config.database !== "none" && config.dbSetup === "none") {
+    buildEnv.add("DATABASE_URL");
+  }
+
+  if (config.backend !== "none" && config.backend !== "convex") {
+    buildEnv.add("CORS_ORIGIN");
+  }
+
+  if (config.auth === "better-auth") {
+    buildEnv.add("BETTER_AUTH_SECRET");
+    buildEnv.add("BETTER_AUTH_URL");
+  }
+
+  if (config.auth === "clerk") {
+    buildEnv.add("CLERK_SECRET_KEY");
+
+    if (["express", "fastify"].includes(config.backend) || config.backend === "self") {
+      buildEnv.add("CLERK_PUBLISHABLE_KEY");
+    }
+  }
+
+  if (config.payments === "abacatepay") {
+    buildEnv.add("ABACATEPAY_API_KEY");
+    buildEnv.add("ABACATEPAY_WEBHOOK_SECRET");
+    buildEnv.add("ABACATEPAY_PUBLIC_KEY");
+    buildEnv.add("ABACATEPAY_RETURN_URL");
+    buildEnv.add("ABACATEPAY_COMPLETION_URL");
+  }
+
+  return [...buildEnv].sort();
 }
 
 function getConvexTasks(): Record<string, TurboTask> {

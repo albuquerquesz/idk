@@ -30,6 +30,7 @@ export function TechIcon({
       icon.includes("planetscale") ||
       icon.includes("nx") ||
       icon.includes("polar") ||
+      icon.includes("abacatepay") ||
       icon.includes("astro") ||
       icon.includes("vercel"))
   ) {

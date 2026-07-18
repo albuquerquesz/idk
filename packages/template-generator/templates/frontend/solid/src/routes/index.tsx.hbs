@@ -1,4 +1,7 @@
 import { createFileRoute } from "@tanstack/solid-router";
+{{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+import { env } from "@{{projectName}}/env/web";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/solid-query";
 import { orpc } from "../utils/orpc";
@@ -29,6 +32,19 @@ const TITLE_TEXT = `
 function App() {
   {{#if (eq api "orpc")}}
   const healthCheck = useQuery(() => orpc.healthCheck.queryOptions());
+  {{/if}}
+  {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+  async function openCheckout() {
+    const baseUrl = {{#if (eq backend "self")}}""{{else}}env.VITE_SERVER_URL{{/if}};
+    const response = await fetch(`${baseUrl}/api/payments/abacatepay/checkout`, {
+      method: "POST",
+    });
+    if (!response.ok) return;
+    const payload = (await response.json()) as { data?: { url?: string } };
+    if (payload.data?.url) {
+      window.location.href = payload.data.url;
+    }
+  }
   {{/if}}
 
   return (
@@ -64,6 +80,17 @@ function App() {
               </div>
             </Match>
           </Switch>
+        </section>
+        {{/if}}
+        {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+        <section class="rounded-lg border p-4">
+          <h2 class="mb-2 font-medium">Hosted Checkout</h2>
+          <p class="mb-4 text-sm text-muted-foreground">
+            Launch a sample AbacatePay checkout without requiring sign-in.
+          </p>
+          <button class="rounded-md border px-4 py-2 text-sm font-medium" onClick={openCheckout}>
+            Open Checkout
+          </button>
         </section>
         {{/if}}
       </div>

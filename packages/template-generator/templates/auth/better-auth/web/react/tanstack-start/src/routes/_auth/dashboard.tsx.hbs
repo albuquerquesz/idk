@@ -1,6 +1,9 @@
 {{#if (eq payments "polar") }}
 import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
+{{else if (eq payments "abacatepay") }}
+import { Button } from "@{{projectName}}/ui/components/button";
+import { env } from "@{{projectName}}/env/web";
 {{/if}}
 {{#if (eq api "trpc") }}
 import { useTRPC } from "@/utils/trpc";
@@ -63,6 +66,22 @@ function RouteComponent() {
           Upgrade to Pro
         </Button>
       )}
+      {{else if (eq payments "abacatepay") }}
+      <Button
+        onClick={async function handleCheckout() {
+          const baseUrl = {{#if (eq backend "self")}}""{{else}}env.VITE_SERVER_URL{{/if}};
+          const response = await fetch(`${baseUrl}/api/payments/abacatepay/checkout`, {
+            method: "POST",
+          });
+          if (!response.ok) return;
+          const payload = (await response.json()) as { data?: { url?: string } };
+          if (payload.data?.url) {
+            window.location.href = payload.data.url;
+          }
+        }}
+      >
+        Open Checkout
+      </Button>
       {{/if}}
     </div>
   );

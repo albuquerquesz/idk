@@ -30,7 +30,7 @@ export const MATRIX_NATIVE_FRONTENDS = [
 ] as const;
 export const MATRIX_APIS = ["trpc", "orpc", "none"] as const;
 export const MATRIX_AUTHS = ["better-auth", "clerk", "none"] as const;
-export const MATRIX_PAYMENTS = ["polar", "none"] as const;
+export const MATRIX_PAYMENTS = ["abacatepay", "none"] as const;
 export const MATRIX_DB_SETUPS = [
   "turso",
   "neon",
@@ -315,7 +315,7 @@ export function createSmokeMatrixCases(): MatrixCase[] {
     for (const frontend of [[], ["native-bare"], ["next"]] as const) {
       pushUnique(configs, seen, {
         payments,
-        auth: payments === "polar" ? "better-auth" : "none",
+        auth: payments === "none" ? "none" : "better-auth",
         frontend: [...frontend],
       });
     }

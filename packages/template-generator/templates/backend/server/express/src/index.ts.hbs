@@ -24,6 +24,13 @@ import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { auth } from "@{{projectName}}/auth";
 import { toNodeHandler } from "better-auth/node";
 {{/if}}
+{{#if (eq payments "abacatepay")}}
+import {
+	createAbacatePayHostedCheckout,
+	getStoredAbacatePayCheckout,
+	processAbacatePayWebhook,
+} from "@{{projectName}}/payments/lib/abacatepay";
+{{/if}}
 {{#if (eq auth "clerk")}}
 import { clerkMiddleware } from "@clerk/express";
 {{/if}}
@@ -49,6 +56,63 @@ app.use(clerkMiddleware());
 
 {{#if (eq auth "better-auth")}}
 app.all("/api/auth{/*path}", toNodeHandler(auth));
+{{/if}}
+
+{{#if (eq payments "abacatepay")}}
+app.post("/api/payments/abacatepay/checkout", async (_req, res) => {
+	{{#if (eq auth "better-auth")}}
+	const headers = new Headers();
+	Object.entries(_req.headers).forEach(([key, value]) => {
+		if (Array.isArray(value)) {
+			for (const entry of value) headers.append(key, entry);
+			return;
+		}
+		if (value) headers.append(key, value);
+	});
+
+	const session = await auth.api.getSession({
+		headers,
+	});
+	const checkout = await createAbacatePayHostedCheckout({
+		userId: session?.user?.id ?? null,
+		customerEmail: session?.user?.email ?? null,
+	});
+	{{else}}
+	const checkout = await createAbacatePayHostedCheckout();
+	{{/if}}
+	res.status(200).json({ data: checkout, success: true, error: null });
+});
+
+app.post(
+	"/api/payments/abacatepay/webhook",
+	express.text({ type: "*/*" }),
+	async (req, res) => {
+		const requestUrl = new URL(req.originalUrl, env.BETTER_AUTH_URL);
+		if (requestUrl.searchParams.get("webhookSecret") !== env.ABACATEPAY_WEBHOOK_SECRET) {
+			res.status(401).json({ error: "Unauthorized" });
+			return;
+		}
+
+		const signature = req.header("X-Webhook-Signature");
+		if (!signature) {
+			res.status(400).json({ error: "Missing X-Webhook-Signature" });
+			return;
+		}
+
+		const result = await processAbacatePayWebhook(req.body, signature);
+		res.status(result.status).json(result.body);
+	},
+);
+
+app.get("/api/payments/abacatepay/checkout/:checkoutId", async (req, res) => {
+	const checkout = await getStoredAbacatePayCheckout(req.params.checkoutId);
+	if (!checkout) {
+		res.status(404).json({ error: "Checkout not found" });
+		return;
+	}
+
+	res.status(200).json({ data: checkout, success: true, error: null });
+});
 {{/if}}
 
 {{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}

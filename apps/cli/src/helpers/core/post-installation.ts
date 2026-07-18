@@ -57,6 +57,7 @@ export async function displayPostInstallInstructions(
     dbSetup,
     webDeploy,
     serverDeploy,
+    observability,
   } = config;
 
   const isConvex = backend === "convex";
@@ -119,6 +120,7 @@ export async function displayPostInstallInstructions(
     serverDeploy,
     backend,
   );
+  const getMonitorInstructions = observability === "getmonitor" ? getGetMonitorInstructions() : "";
 
   const hasWeb = frontend?.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
   const hasNative =
@@ -230,6 +232,7 @@ export async function displayPostInstallInstructions(
   if (starlightInstructions) output += `\n${starlightInstructions.trim()}\n`;
   if (clerkInstructions) output += `\n${clerkInstructions.trim()}\n`;
   if (betterAuthConvexInstructions) output += `\n${betterAuthConvexInstructions.trim()}\n`;
+  if (getMonitorInstructions) output += `\n${getMonitorInstructions.trim()}\n`;
   // Deploy steps come last so env sync happens after auth/payment keys exist
   if (alchemyDeployInstructions) output += `\n${alchemyDeployInstructions.trim()}\n`;
 
@@ -462,6 +465,18 @@ function getNoOrmWarning() {
   )} Database selected without an ORM. Features requiring\n   database access (e.g., examples, auth) need manual setup.`;
 }
 
+function getGetMonitorInstructions() {
+  return `${pc.bold("GetMonitor observability:")}\n${pc.cyan(
+    "•",
+  )} Deploy first, then create an HTTP monitor for a stable public health endpoint\n${pc.cyan(
+    "•",
+  )} Add an alert integration and test delivery\n${pc.cyan(
+    "•",
+  )} Create a status page and add the monitor as a component\n${pc.dim(
+    "   https://getmonitor.io/docs/getting-started/introduction/",
+  )}`;
+}
+
 function getBunWebNativeWarning() {
   return `\n${pc.yellow(
     "WARNING:",
@@ -625,7 +640,8 @@ function getAlchemyDeployInstructions(
   }
 
   if (webDeploy === "vercel" || serverDeploy === "vercel") {
-    const mixedWithCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+    const mixedWithCloudflare =
+      webDeploy !== "none" && serverDeploy !== "none" && webDeploy !== serverDeploy;
     const vercelSetupScript = "deploy:setup";
     const vercelEnvScript = "env:production";
     const vercelDeployScript = mixedWithCloudflare
@@ -641,6 +657,26 @@ function getAlchemyDeployInstructions(
           : "server";
     instructions.push(
       `${pc.bold(`Deploy ${vercelTargets} with Vercel Services:`)}\n${pc.cyan("•")} Link project: ${`${runCmd} ${vercelSetupScript}`}\n${pc.cyan("•")} Sync env (before first deploy): ${`${runCmd} ${vercelEnvScript}`}\n${pc.cyan("•")} Deploy: ${`${runCmd} ${vercelDeployScript}`}\n${pc.cyan("•")} Guide: https://www.better-t-stack.dev/docs/guides/vercel`,
+    );
+  }
+
+  if (webDeploy === "guaracloud" || serverDeploy === "guaracloud") {
+    const splitTargets =
+      (webDeploy !== "none" && serverDeploy !== "none" && webDeploy !== serverDeploy) ||
+      (webDeploy === "guaracloud" && serverDeploy === "guaracloud");
+    const target = webDeploy === "guaracloud" ? "web" : "server";
+    const deployScript = splitTargets ? `deploy:${target}` : "deploy";
+    const linkScript = `${deployScript}:link`;
+    const logsScript = `${deployScript}:logs`;
+    const guaraTargets =
+      webDeploy === "guaracloud" && (serverDeploy === "guaracloud" || isBackendSelf)
+        ? "web + server"
+        : webDeploy === "guaracloud"
+          ? "web"
+          : "server";
+
+    instructions.push(
+      `${pc.bold(`Deploy ${guaraTargets} with Guara Cloud:`)}\n${pc.cyan("•")} Login: ${`${runCmd} deploy:login`}\n${pc.cyan("•")} Link app directory: ${`${runCmd} ${linkScript}`}\n${pc.cyan("•")} Deploy: ${`${runCmd} ${deployScript}`}\n${pc.cyan("•")} Logs: ${`${runCmd} ${logsScript}`}\n${pc.cyan("•")} Docs: https://guaracloud.com/docs/getting-started/introduction/`,
     );
   }
 

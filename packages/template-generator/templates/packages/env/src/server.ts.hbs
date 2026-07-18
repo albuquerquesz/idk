@@ -150,6 +150,13 @@ export const env = createEnv({
 		POLAR_ACCESS_TOKEN: z.string().min(1),
 		POLAR_SUCCESS_URL: z.url(),
 {{/if}}
+{{#if (eq payments "abacatepay")}}
+		ABACATEPAY_API_KEY: z.string().min(1),
+		ABACATEPAY_WEBHOOK_SECRET: z.string().min(1),
+		ABACATEPAY_PUBLIC_KEY: z.string().min(1),
+		ABACATEPAY_RETURN_URL: z.url(),
+		ABACATEPAY_COMPLETION_URL: z.url(),
+{{/if}}
 		CORS_ORIGIN: z.url(),
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},

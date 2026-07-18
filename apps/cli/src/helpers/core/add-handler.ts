@@ -312,6 +312,7 @@ async function addHandlerInternal(
     examples: existingConfig.examples,
     auth: existingConfig.auth,
     payments: existingConfig.payments,
+    observability: existingConfig.observability,
     git: false,
     packageManager: input.packageManager || existingConfig.packageManager,
     install: input.install ?? false,

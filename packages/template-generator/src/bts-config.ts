@@ -29,6 +29,7 @@ export function writeBtsConfigToVfs(
     examples: projectConfig.examples,
     auth: projectConfig.auth,
     payments: projectConfig.payments,
+    observability: projectConfig.observability,
     packageManager: projectConfig.packageManager,
     dbSetup: projectConfig.dbSetup,
     api: projectConfig.api,

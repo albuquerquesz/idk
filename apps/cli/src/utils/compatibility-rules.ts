@@ -355,6 +355,28 @@ export function validateVercelServerDeploy(
   return Result.ok(undefined);
 }
 
+export function validateGuaraCloudServerDeploy(
+  serverDeploy: ServerDeploy | undefined,
+  backend: Backend | undefined,
+  runtime: Runtime | undefined,
+): ValidationResult {
+  if (serverDeploy !== "guaracloud") return Result.ok(undefined);
+
+  if (backend === "convex" || backend === "self") {
+    return validationErr(
+      "'--server-deploy guaracloud' requires a separate server backend (hono, express, fastify, elysia). For a fullstack 'self' backend, use '--web-deploy guaracloud' instead.",
+    );
+  }
+
+  if (runtime === "workers") {
+    return validationErr(
+      "'--server-deploy guaracloud' is not compatible with '--runtime workers'. Use '--runtime bun' or '--runtime node', or choose '--server-deploy cloudflare'.",
+    );
+  }
+
+  return Result.ok(undefined);
+}
+
 // Frontends whose docker image needs server output, which desktop addons replace with a static export
 const DOCKER_SERVER_OUTPUT_FRONTENDS = [
   "next",
@@ -529,11 +551,51 @@ export function validateAddonsAgainstConfig(
 
 export function validatePaymentsCompatibility(
   payments: Payments | undefined,
-  _auth: Auth | undefined,
-  _backend: Backend | undefined,
-  _frontends: Frontend[] = [],
+  auth: Auth | undefined,
+  backend: Backend | undefined,
+  frontends: Frontend[] = [],
+  orm?: ProjectConfig["orm"],
+  database?: ProjectConfig["database"],
 ): ValidationResult {
   if (!payments || payments === "none") return Result.ok(undefined);
+
+  if (payments === "abacatepay") {
+    if (backend === "convex") {
+      return validationErr(
+        "AbacatePay payments is not compatible with '--backend convex'. Please use a server backend or backend 'self'.",
+      );
+    }
+
+    const hasWebFrontend = frontends.some((frontend) => isWebFrontend(frontend));
+    if (!hasWebFrontend) {
+      return validationErr(
+        "AbacatePay payments requires a web frontend. Please choose next, tanstack-start, tanstack-router, react-router, nuxt, svelte, solid, or astro.",
+      );
+    }
+
+    const hasNativeOnly =
+      frontends.length > 0 &&
+      frontends.every((frontend) =>
+        ["native-bare", "native-uniwind", "native-unistyles"].includes(frontend),
+      );
+    if (hasNativeOnly) {
+      return validationErr(
+        "AbacatePay payments is not compatible with native-only frontends. Please add a supported web frontend or use '--payments none'.",
+      );
+    }
+
+    if (database === "none" || orm === "none") {
+      return validationErr(
+        "AbacatePay payments v1 requires a SQL database with Drizzle or Prisma. Database and ORM cannot be 'none'.",
+      );
+    }
+
+    if (database === "mongodb" || orm === "mongoose") {
+      return validationErr(
+        "AbacatePay payments v1 requires a SQL database with Drizzle or Prisma. MongoDB and Mongoose are not supported.",
+      );
+    }
+  }
 
   return Result.ok(undefined);
 }

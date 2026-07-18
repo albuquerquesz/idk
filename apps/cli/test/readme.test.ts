@@ -36,6 +36,32 @@ async function generateReadme(config: Parameters<typeof createVirtual>[0]): Prom
 }
 
 describe("README generation", () => {
+  it("documents AbacatePay setup for self + next projects", async () => {
+    const readme = await generateReadme({
+      frontend: ["next"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "drizzle",
+      auth: "none",
+      api: "none",
+      examples: ["none"],
+      payments: "abacatepay",
+    });
+
+    expect(readme).toContain("## AbacatePay Setup");
+    expect(readme).toContain("Configure these variables in `apps/web/.env`");
+    expect(readme).toContain("`ABACATEPAY_API_KEY`");
+    expect(readme).toContain("`ABACATEPAY_WEBHOOK_SECRET`");
+    expect(readme).toContain("`ABACATEPAY_PUBLIC_KEY`");
+    expect(readme).toContain("`ABACATEPAY_RETURN_URL`");
+    expect(readme).toContain("`ABACATEPAY_COMPLETION_URL`");
+    expect(readme).toContain("`CORS_ORIGIN` in `apps/web/.env`");
+    expect(readme).toContain("/api/payments/abacatepay/webhook?webhookSecret=");
+    expect(readme).toContain("placeholder `prod_your_product_id`");
+    expect(readme).toContain("`packages/payments/src/lib/abacatepay.ts`");
+  });
+
   it("documents Clerk env setup for next + express", async () => {
     const readme = await generateReadme({
       frontend: ["next"],

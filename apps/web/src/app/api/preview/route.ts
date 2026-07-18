@@ -111,6 +111,7 @@ function stackStateToConfig(state: StackState): ProjectConfig {
     examples: (state.examples || []).filter((e) => e !== "none") as ProjectConfig["examples"],
     auth: (state.auth || "none") as ProjectConfig["auth"],
     payments: (state.payments || "none") as ProjectConfig["payments"],
+    observability: (state.observability || "none") as ProjectConfig["observability"],
     git,
     packageManager: (state.packageManager || "bun") as ProjectConfig["packageManager"],
     install: false,

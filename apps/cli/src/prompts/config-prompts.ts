@@ -9,6 +9,7 @@ import type {
   Examples,
   Frontend,
   ORM,
+  Observability,
   PackageManager,
   Payments,
   ProjectConfig,
@@ -29,6 +30,7 @@ import { getFrontendChoice } from "./frontend";
 import { getGitChoice } from "./git";
 import { getinstallChoice } from "./install";
 import { navigableGroup } from "./navigable-group";
+import { getObservabilityChoice } from "./observability";
 import { getORMChoice } from "./orm";
 import { getPackageManagerChoice } from "./package-manager";
 import { getPaymentsChoice } from "./payments";
@@ -45,6 +47,7 @@ type PromptGroupResults = {
   api: API;
   auth: Auth;
   payments: Payments;
+  observability: Observability;
   addons: Addons[];
   examples: Examples[];
   dbSetup: DatabaseSetup;
@@ -75,6 +78,7 @@ export async function gatherConfig(
       orm: flags.orm ?? DEFAULT_CONFIG.orm,
       auth: flags.auth ?? DEFAULT_CONFIG.auth,
       payments: flags.payments ?? DEFAULT_CONFIG.payments,
+      observability: flags.observability ?? DEFAULT_CONFIG.observability,
       addons: flags.addons ?? [...DEFAULT_CONFIG.addons],
       examples: flags.examples ?? [...DEFAULT_CONFIG.examples],
       git: flags.git ?? DEFAULT_CONFIG.git,
@@ -118,6 +122,8 @@ export async function gatherConfig(
           results.frontend,
           previousAnswer,
         ),
+      observability: ({ previousAnswer }) =>
+        getObservabilityChoice(flags.observability, previousAnswer),
       addons: ({ results, previousAnswer }) =>
         getAddonsChoice(
           flags.addons,
@@ -187,6 +193,7 @@ export async function gatherConfig(
     orm: result.orm,
     auth: result.auth,
     payments: result.payments,
+    observability: result.observability,
     addons: result.addons,
     examples: result.examples,
     git: result.git,

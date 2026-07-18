@@ -158,18 +158,18 @@ describe("Integration Tests - Real World Scenarios", () => {
       );
     });
 
-    it("should fail with payments incompatibility", async () => {
+    it("should fail with abacatepay without SQL persistence", async () => {
       const result = await runTRPCTest({
-        projectName: "polar-no-auth-fail",
+        projectName: "abacatepay-no-db-fail",
         backend: "hono",
         runtime: "bun",
         database: "none",
         orm: "none",
         auth: "none",
-        payments: "polar",
+        payments: "abacatepay",
         api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["turborepo"],
+        frontend: ["next"],
+        addons: ["none"],
         examples: ["none"],
         dbSetup: "none",
         webDeploy: "none",
@@ -177,7 +177,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         expectError: true,
       });
 
-      expectError(result, "Polar payments requires Better Auth");
+      expectError(result, "AbacatePay payments v1 requires a SQL database with Drizzle or Prisma");
     });
 
     it("should fail with deployment constraint violation", async () => {

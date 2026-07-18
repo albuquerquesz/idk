@@ -91,14 +91,18 @@ export const AuthSchema = z
   .enum(["better-auth", "clerk", "none"])
   .describe("Authentication provider");
 
-export const PaymentsSchema = z.enum(["none"]).describe("Payments provider");
+export const PaymentsSchema = z.enum(["none", "abacatepay"]).describe("Payments provider");
+
+export const ObservabilitySchema = z
+  .enum(["none", "getmonitor"])
+  .describe("Observability provider");
 
 export const WebDeploySchema = z
-  .enum(["cloudflare", "docker", "vercel", "none"])
+  .enum(["cloudflare", "docker", "vercel", "guaracloud", "none"])
   .describe("Web deployment");
 
 export const ServerDeploySchema = z
-  .enum(["cloudflare", "docker", "vercel", "none"])
+  .enum(["cloudflare", "docker", "vercel", "guaracloud", "none"])
   .describe("Server deployment");
 
 export const DirectoryConflictSchema = z
@@ -431,6 +435,7 @@ export const CreateInputSchema = z
     orm: ORMSchema.optional(),
     auth: AuthSchema.optional(),
     payments: PaymentsSchema.optional(),
+    observability: ObservabilitySchema.optional(),
     frontend: z.array(FrontendSchema).optional(),
     addons: AddonsListSchema.optional(),
     examples: z.array(ExamplesSchema).optional(),
@@ -486,6 +491,7 @@ export const ProjectConfigSchema = z.object({
   examples: z.array(ExamplesSchema),
   auth: AuthSchema,
   payments: PaymentsSchema,
+  observability: ObservabilitySchema,
   git: z.boolean(),
   packageManager: PackageManagerSchema,
   install: z.boolean(),
@@ -510,6 +516,7 @@ export const BetterTStackConfigSchema = z.object({
   examples: z.array(ExamplesSchema),
   auth: AuthSchema,
   payments: PaymentsSchema,
+  observability: ObservabilitySchema,
   packageManager: PackageManagerSchema,
   dbSetup: DatabaseSetupSchema,
   api: APISchema,
@@ -552,6 +559,7 @@ export const DATABASE_SETUP_VALUES = DatabaseSetupSchema.options;
 export const API_VALUES = APISchema.options;
 export const AUTH_VALUES = AuthSchema.options;
 export const PAYMENTS_VALUES = PaymentsSchema.options;
+export const OBSERVABILITY_VALUES = ObservabilitySchema.options;
 export const WEB_DEPLOY_VALUES = WebDeploySchema.options;
 export const SERVER_DEPLOY_VALUES = ServerDeploySchema.options;
 export const DIRECTORY_CONFLICT_VALUES = DirectoryConflictSchema.options;

@@ -20,6 +20,13 @@ import { createAuth } from "@{{projectName}}/auth";
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
+{{#if (eq payments "abacatepay")}}
+import {
+	createAbacatePayHostedCheckout,
+	getStoredAbacatePayCheckout,
+	processAbacatePayWebhook,
+} from "@{{projectName}}/payments/lib/abacatepay";
+{{/if}}
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -62,6 +69,48 @@ app.on(
 		auth.handler(c.req.raw)
 {{/if}}
 );
+{{/if}}
+
+{{#if (eq payments "abacatepay")}}
+app.post("/api/payments/abacatepay/checkout", async (c) => {
+	{{#if (eq auth "better-auth")}}
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+		headers: c.req.raw.headers,
+	});
+	const checkout = await createAbacatePayHostedCheckout({
+		userId: session?.user?.id ?? null,
+		customerEmail: session?.user?.email ?? null,
+	});
+	{{else}}
+	const checkout = await createAbacatePayHostedCheckout();
+	{{/if}}
+	return c.json({ data: checkout, success: true, error: null });
+});
+
+app.post("/api/payments/abacatepay/webhook", async (c) => {
+	const requestUrl = new URL(c.req.url);
+	if (requestUrl.searchParams.get("webhookSecret") !== env.ABACATEPAY_WEBHOOK_SECRET) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
+
+	const signature = c.req.header("X-Webhook-Signature");
+	if (!signature) {
+		return c.json({ error: "Missing X-Webhook-Signature" }, 400);
+	}
+
+	const rawBody = await c.req.text();
+	const result = await processAbacatePayWebhook(rawBody, signature);
+	return c.json(result.body, result.status);
+});
+
+app.get("/api/payments/abacatepay/checkout/:checkoutId", async (c) => {
+	const checkout = await getStoredAbacatePayCheckout(c.req.param("checkoutId"));
+	if (!checkout) {
+		return c.json({ error: "Checkout not found" }, 404);
+	}
+
+	return c.json({ data: checkout, success: true, error: null });
+});
 {{/if}}
 
 {{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}

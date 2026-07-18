@@ -80,6 +80,13 @@ export const server = await Worker("server", {
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
     {{/if}}
+    {{#if (eq payments "abacatepay")}}
+    ABACATEPAY_API_KEY: alchemy.secret.env.ABACATEPAY_API_KEY!,
+    ABACATEPAY_WEBHOOK_SECRET: alchemy.secret.env.ABACATEPAY_WEBHOOK_SECRET!,
+    ABACATEPAY_PUBLIC_KEY: alchemy.secret.env.ABACATEPAY_PUBLIC_KEY!,
+    ABACATEPAY_RETURN_URL: alchemy.env.ABACATEPAY_RETURN_URL!,
+    ABACATEPAY_COMPLETION_URL: alchemy.env.ABACATEPAY_COMPLETION_URL!,
+    {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
     {{/if}}
@@ -138,6 +145,13 @@ export const web = await Nextjs("web", {
     {{#if (eq payments "polar")}}
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq payments "abacatepay")}}
+    ABACATEPAY_API_KEY: alchemy.secret.env.ABACATEPAY_API_KEY!,
+    ABACATEPAY_WEBHOOK_SECRET: alchemy.secret.env.ABACATEPAY_WEBHOOK_SECRET!,
+    ABACATEPAY_PUBLIC_KEY: alchemy.secret.env.ABACATEPAY_PUBLIC_KEY!,
+    ABACATEPAY_RETURN_URL: alchemy.env.ABACATEPAY_RETURN_URL!,
+    ABACATEPAY_COMPLETION_URL: alchemy.env.ABACATEPAY_COMPLETION_URL!,
     {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
@@ -198,6 +212,13 @@ export const web = await Nuxt("web", {
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
     {{/if}}
+    {{#if (eq payments "abacatepay")}}
+    ABACATEPAY_API_KEY: alchemy.secret.env.ABACATEPAY_API_KEY!,
+    ABACATEPAY_WEBHOOK_SECRET: alchemy.secret.env.ABACATEPAY_WEBHOOK_SECRET!,
+    ABACATEPAY_PUBLIC_KEY: alchemy.secret.env.ABACATEPAY_PUBLIC_KEY!,
+    ABACATEPAY_RETURN_URL: alchemy.env.ABACATEPAY_RETURN_URL!,
+    ABACATEPAY_COMPLETION_URL: alchemy.env.ABACATEPAY_COMPLETION_URL!,
+    {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
     {{/if}}
@@ -244,6 +265,13 @@ export const web = await SvelteKit("web", {
     {{#if (eq payments "polar")}}
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq payments "abacatepay")}}
+    ABACATEPAY_API_KEY: alchemy.secret.env.ABACATEPAY_API_KEY!,
+    ABACATEPAY_WEBHOOK_SECRET: alchemy.secret.env.ABACATEPAY_WEBHOOK_SECRET!,
+    ABACATEPAY_PUBLIC_KEY: alchemy.secret.env.ABACATEPAY_PUBLIC_KEY!,
+    ABACATEPAY_RETURN_URL: alchemy.env.ABACATEPAY_RETURN_URL!,
+    ABACATEPAY_COMPLETION_URL: alchemy.env.ABACATEPAY_COMPLETION_URL!,
     {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
@@ -301,6 +329,13 @@ export const web = await TanStackStart("web", {
     {{#if (eq payments "polar")}}
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq payments "abacatepay")}}
+    ABACATEPAY_API_KEY: alchemy.secret.env.ABACATEPAY_API_KEY!,
+    ABACATEPAY_WEBHOOK_SECRET: alchemy.secret.env.ABACATEPAY_WEBHOOK_SECRET!,
+    ABACATEPAY_PUBLIC_KEY: alchemy.secret.env.ABACATEPAY_PUBLIC_KEY!,
+    ABACATEPAY_RETURN_URL: alchemy.env.ABACATEPAY_RETURN_URL!,
+    ABACATEPAY_COMPLETION_URL: alchemy.env.ABACATEPAY_COMPLETION_URL!,
     {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
@@ -400,6 +435,13 @@ export const web = await Astro("web", {
     {{#if (eq payments "polar")}}
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq payments "abacatepay")}}
+    ABACATEPAY_API_KEY: alchemy.secret.env.ABACATEPAY_API_KEY!,
+    ABACATEPAY_WEBHOOK_SECRET: alchemy.secret.env.ABACATEPAY_WEBHOOK_SECRET!,
+    ABACATEPAY_PUBLIC_KEY: alchemy.secret.env.ABACATEPAY_PUBLIC_KEY!,
+    ABACATEPAY_RETURN_URL: alchemy.env.ABACATEPAY_RETURN_URL!,
+    ABACATEPAY_COMPLETION_URL: alchemy.env.ABACATEPAY_COMPLETION_URL!,
     {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,

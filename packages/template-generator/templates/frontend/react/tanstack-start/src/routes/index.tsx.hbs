@@ -1,4 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+{{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+import { env } from "@{{projectName}}/env/web";
+{{/if}}
 {{#if (eq backend "convex")}}
 import { convexQuery } from "@convex-dev/react-query";
 import { useQuery } from "@tanstack/react-query";
@@ -42,6 +45,19 @@ function HomeComponent() {
   {{else if (eq api "orpc")}}
   const healthCheck = useQuery(orpc.healthCheck.queryOptions());
   {{/if}}
+  {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+  async function openCheckout() {
+    const baseUrl = {{#if (eq backend "self")}}""{{else}}env.VITE_SERVER_URL{{/if}};
+    const response = await fetch(`${baseUrl}/api/payments/abacatepay/checkout`, {
+      method: "POST",
+    });
+    if (!response.ok) return;
+    const payload = (await response.json()) as { data?: { url?: string } };
+    if (payload.data?.url) {
+      window.location.href = payload.data.url;
+    }
+  }
+  {{/if}}
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-2">
@@ -79,6 +95,17 @@ function HomeComponent() {
             {{/unless}}
           {{/if}}
         </section>
+        {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+        <section className="rounded-lg border p-4">
+          <h2 className="mb-2 font-medium">Hosted Checkout</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Launch a sample AbacatePay checkout without requiring sign-in.
+          </p>
+          <button className="rounded-md border px-4 py-2 text-sm font-medium" onClick={openCheckout}>
+            Open Checkout
+          </button>
+        </section>
+        {{/if}}
       </div>
     </div>
   );

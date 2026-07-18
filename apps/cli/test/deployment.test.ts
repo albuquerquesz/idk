@@ -1425,4 +1425,128 @@ describe("Deployment Configurations", () => {
       expectError(result, "'--server-deploy docker' requires a separate server backend");
     });
   });
+
+  describe("Guara Cloud Deploy", () => {
+    it("should generate Guara Cloud scripts and docs for split web/server targets", async () => {
+      const result = await createVirtual({
+        projectName: "guara-split-deploy",
+        webDeploy: "guaracloud",
+        serverDeploy: "guaracloud",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const rootPkg = JSON.parse(files.get("package.json") ?? "{}");
+      const readme = files.get("README.md") ?? "";
+
+      expect(files.get("apps/web/Dockerfile")).toContain(
+        "COPY --from=oven/bun:1 /usr/local/bin/bun",
+      );
+      expect(files.get("apps/server/Dockerfile")).toContain(
+        "COPY --from=oven/bun:1 /usr/local/bin/bun",
+      );
+      expect(rootPkg.devDependencies?.["@guaracloud/cli"]).toBeDefined();
+      expect(rootPkg.scripts).toMatchObject({
+        "deploy:login": "guara login",
+        "deploy:web:link": "cd apps/web && guara link",
+        "deploy:web": "cd apps/web && guara deploy",
+        "deploy:web:logs": "cd apps/web && guara logs",
+        "deploy:web:build-logs": "cd apps/web && guara build-logs",
+        "rollback:web": "cd apps/web && guara rollback",
+        "deploy:server:link": "cd apps/server && guara link",
+        "deploy:server": "cd apps/server && guara deploy",
+        "deploy:server:logs": "cd apps/server && guara logs",
+        "deploy:server:build-logs": "cd apps/server && guara build-logs",
+        "rollback:server": "cd apps/server && guara rollback",
+      });
+      expect(readme).toContain("### Guara Cloud");
+      expect(readme).toContain(
+        "One Guara service should be linked per app directory in this monorepo.",
+      );
+      expect(readme).toContain("deploy:server:build-logs");
+    });
+
+    it("should generate single-target Guara Cloud scripts for fullstack web deploys", async () => {
+      const result = await createVirtual({
+        projectName: "guara-fullstack-web",
+        webDeploy: "guaracloud",
+        serverDeploy: "none",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const rootPkg = JSON.parse(files.get("package.json") ?? "{}");
+
+      expect(files.get("apps/web/Dockerfile")).toContain(
+        "COPY --from=oven/bun:1 /usr/local/bin/bun",
+      );
+      expect(files.has("apps/server/Dockerfile")).toBe(false);
+      expect(rootPkg.scripts).toMatchObject({
+        "deploy:login": "guara login",
+        "deploy:link": "cd apps/web && guara link",
+        deploy: "cd apps/web && guara deploy",
+        "deploy:logs": "cd apps/web && guara logs",
+        "deploy:build-logs": "cd apps/web && guara build-logs",
+        rollback: "cd apps/web && guara rollback",
+      });
+    });
+
+    it("should fail with Guara Cloud server deploy + workers runtime", async () => {
+      const result = await runTRPCTest({
+        projectName: "guara-workers-fail",
+        webDeploy: "none",
+        serverDeploy: "guaracloud",
+        backend: "hono",
+        runtime: "workers",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        expectError: true,
+      });
+
+      expectError(
+        result,
+        "'--server-deploy guaracloud' is not compatible with '--runtime workers'",
+      );
+    });
+  });
 });

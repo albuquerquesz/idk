@@ -32,6 +32,9 @@ export const stackParsers = {
   payments: parseAsStringEnum<StackState["payments"]>(getValidIds("payments")).withDefault(
     DEFAULT_STACK.payments,
   ),
+  observability: parseAsStringEnum<StackState["observability"]>(
+    getValidIds("observability"),
+  ).withDefault(DEFAULT_STACK.observability),
   packageManager: parseAsStringEnum<StackState["packageManager"]>(
     getValidIds("packageManager"),
   ).withDefault(DEFAULT_STACK.packageManager),
@@ -76,6 +79,7 @@ export function useStackState() {
     dbSetup: queryState.dbSetup,
     auth: queryState.auth,
     payments: queryState.payments,
+    observability: queryState.observability,
     packageManager: queryState.packageManager,
     addons: queryState.addons,
     examples: queryState.examples,

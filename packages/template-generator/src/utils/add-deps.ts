@@ -159,6 +159,7 @@ export const dependencyVersionMap = {
 
   alchemy: "^0.93.12",
   vercel: "^54.18.6",
+  "@guaracloud/cli": "^0.3.0",
 
   dotenv: "^17.4.2",
   tsdown: "^0.22.3",

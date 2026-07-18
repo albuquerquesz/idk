@@ -36,6 +36,12 @@ function getDeploymentDisplay(deployment: WebDeploy): {
       hint: "Deploy to Vercel with Services",
     };
   }
+  if (deployment === "guaracloud") {
+    return {
+      label: "Guara Cloud",
+      hint: "Deploy containers on Guara Cloud via GitHub or Docker image",
+    };
+  }
   return {
     label: deployment,
     hint: `Add ${deployment} deployment`,
@@ -59,7 +65,7 @@ export async function getDeploymentChoice(
     return "cloudflare";
   }
 
-  const availableDeployments = ["cloudflare", "docker", "vercel", "none"];
+  const availableDeployments = ["cloudflare", "docker", "vercel", "guaracloud", "none"];
 
   const options: DeploymentOption[] = availableDeployments.map((deploy) => {
     const { label, hint } = getDeploymentDisplay(deploy as WebDeploy);
@@ -91,12 +97,12 @@ export async function getDeploymentToAdd(frontend: Frontend[], existingDeploymen
     return "none";
   }
 
-  const options: DeploymentOption[] = (["cloudflare", "docker", "vercel"] as const).map(
-    (deploy) => {
-      const { label, hint } = getDeploymentDisplay(deploy);
-      return { value: deploy, label, hint };
-    },
-  );
+  const options: DeploymentOption[] = (
+    ["cloudflare", "docker", "vercel", "guaracloud"] as const
+  ).map((deploy) => {
+    const { label, hint } = getDeploymentDisplay(deploy);
+    return { value: deploy, label, hint };
+  });
 
   options.push({
     value: "none",

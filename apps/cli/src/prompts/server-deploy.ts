@@ -33,6 +33,12 @@ function getDeploymentDisplay(deployment: ServerDeploy): {
       hint: "Deploy to Vercel with Services",
     };
   }
+  if (deployment === "guaracloud") {
+    return {
+      label: "Guara Cloud",
+      hint: "Deploy containers on Guara Cloud via GitHub or Docker image",
+    };
+  }
   return {
     label: deployment,
     hint: `Add ${deployment} deployment`,
@@ -106,7 +112,7 @@ export async function getServerDeploymentToAdd(
   }
 
   if (runtime === "bun" || runtime === "node") {
-    for (const deploy of ["docker", "vercel"] as const) {
+    for (const deploy of ["docker", "vercel", "guaracloud"] as const) {
       const { label, hint } = getDeploymentDisplay(deploy);
       options.push({
         value: deploy,

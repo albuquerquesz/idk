@@ -39,6 +39,7 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
   updateRootPackageJson(vfs, config);
   updateConfigPackageJson(vfs, config);
   updateEnvPackageJson(vfs, config);
+  updatePaymentsPackageJson(vfs, config);
   updateUiPackageJson(vfs, config);
   updateInfraPackageJson(vfs, config);
   updateDesktopPackageJson(vfs, config);
@@ -185,11 +186,16 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   const hasCloudflareDeploy =
     config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare";
   const hasVercelDeploy = config.webDeploy === "vercel" || config.serverDeploy === "vercel";
-  // When web and server deploy to different cloud platforms, deploy scripts
-  // are named by target (deploy:web / deploy:server); otherwise plain deploy
-  const isMixedCloud = hasCloudflareDeploy && hasVercelDeploy;
+  const hasGuaraCloudDeploy =
+    config.webDeploy === "guaracloud" || config.serverDeploy === "guaracloud";
+  // When web and server deploy to different targets, deploy scripts are named
+  // by target (deploy:web / deploy:server); otherwise plain deploy.
+  const hasSplitDeployTargets =
+    config.webDeploy !== "none" &&
+    config.serverDeploy !== "none" &&
+    config.webDeploy !== config.serverDeploy;
   if (hasCloudflareDeploy) {
-    const cfDeployScript = isMixedCloud
+    const cfDeployScript = hasSplitDeployTargets
       ? config.webDeploy === "cloudflare"
         ? "deploy:web"
         : "deploy:server"
@@ -200,7 +206,7 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
 
   if (hasVercelDeploy) {
     const vercelTarget = config.webDeploy === "vercel" ? "web" : "server";
-    const vercelDeploy = isMixedCloud ? `deploy:${vercelTarget}` : "deploy";
+    const vercelDeploy = hasSplitDeployTargets ? `deploy:${vercelTarget}` : "deploy";
     scripts["deploy:setup"] = "vercel link";
     scripts["dev:vercel"] = "vercel dev -L";
     scripts["env:preview"] = "tsx scripts/sync-vercel-env.ts preview";
@@ -208,6 +214,45 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     scripts[vercelDeploy] = "vercel deploy";
     scripts[`${vercelDeploy}:prod`] = "vercel deploy --prod";
     scripts["deploy:check"] = "vercel deploy --dry";
+  }
+
+  if (hasGuaraCloudDeploy) {
+    scripts["deploy:login"] = "guara login";
+    const usesTargetScopedGuaraScripts =
+      hasSplitDeployTargets ||
+      (config.webDeploy === "guaracloud" && config.serverDeploy === "guaracloud");
+
+    if (config.webDeploy === "guaracloud") {
+      const deployScript = usesTargetScopedGuaraScripts ? "deploy:web" : "deploy";
+      const linkScript = usesTargetScopedGuaraScripts ? "deploy:web:link" : "deploy:link";
+      const logsScript = usesTargetScopedGuaraScripts ? "deploy:web:logs" : "deploy:logs";
+      const buildLogsScript = usesTargetScopedGuaraScripts
+        ? "deploy:web:build-logs"
+        : "deploy:build-logs";
+      const rollbackScript = usesTargetScopedGuaraScripts ? "rollback:web" : "rollback";
+
+      scripts[linkScript] = "cd apps/web && guara link";
+      scripts[deployScript] = "cd apps/web && guara deploy";
+      scripts[logsScript] = "cd apps/web && guara logs";
+      scripts[buildLogsScript] = "cd apps/web && guara build-logs";
+      scripts[rollbackScript] = "cd apps/web && guara rollback";
+    }
+
+    if (config.serverDeploy === "guaracloud") {
+      const deployScript = usesTargetScopedGuaraScripts ? "deploy:server" : "deploy";
+      const linkScript = usesTargetScopedGuaraScripts ? "deploy:server:link" : "deploy:link";
+      const logsScript = usesTargetScopedGuaraScripts ? "deploy:server:logs" : "deploy:logs";
+      const buildLogsScript = usesTargetScopedGuaraScripts
+        ? "deploy:server:build-logs"
+        : "deploy:build-logs";
+      const rollbackScript = usesTargetScopedGuaraScripts ? "rollback:server" : "rollback";
+
+      scripts[linkScript] = "cd apps/server && guara link";
+      scripts[deployScript] = "cd apps/server && guara deploy";
+      scripts[logsScript] = "cd apps/server && guara logs";
+      scripts[buildLogsScript] = "cd apps/server && guara build-logs";
+      scripts[rollbackScript] = "cd apps/server && guara rollback";
+    }
   }
 
   // Add compose scripts when deploying web/server as Docker containers
@@ -592,6 +637,14 @@ function updateEnvPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): vo
   pkgJson.exports = exports;
 
   vfs.writeJson("packages/env/package.json", pkgJson);
+}
+
+function updatePaymentsPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  const pkgJson = vfs.readJson<PackageJson>("packages/payments/package.json");
+  if (!pkgJson) return;
+
+  pkgJson.name = `@${config.projectName}/payments`;
+  vfs.writeJson("packages/payments/package.json", pkgJson);
 }
 
 function updateUiPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {

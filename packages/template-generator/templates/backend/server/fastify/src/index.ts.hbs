@@ -27,6 +27,13 @@ import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{#if (eq auth "better-auth")}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
+{{#if (eq payments "abacatepay")}}
+import {
+	createAbacatePayHostedCheckout,
+	getStoredAbacatePayCheckout,
+	processAbacatePayWebhook,
+} from "@{{projectName}}/payments/lib/abacatepay";
+{{/if}}
 {{#if (eq auth "clerk")}}
 import { clerkPlugin } from "@clerk/fastify";
 {{/if}}
@@ -166,6 +173,65 @@ fastify.route({
 			});
 		}
 	}
+});
+{{/if}}
+
+{{#if (eq payments "abacatepay")}}
+fastify.post("/api/payments/abacatepay/checkout", async (request, reply) => {
+	{{#if (eq auth "better-auth")}}
+	const headers = new Headers();
+	Object.entries(request.headers).forEach(([key, value]) => {
+		if (value) headers.append(key, value.toString());
+	});
+
+	const session = await auth.api.getSession({ headers });
+	const checkout = await createAbacatePayHostedCheckout({
+		userId: session?.user?.id ?? null,
+		customerEmail: session?.user?.email ?? null,
+	});
+	{{else}}
+	const checkout = await createAbacatePayHostedCheckout();
+	{{/if}}
+	reply.status(200).send({ data: checkout, success: true, error: null });
+});
+
+fastify.post(
+	"/api/payments/abacatepay/webhook",
+	{
+		config: {
+			rawBody: true,
+		},
+	},
+	async (request, reply) => {
+		const requestUrl = new URL(request.url, env.BETTER_AUTH_URL);
+		if (requestUrl.searchParams.get("webhookSecret") !== env.ABACATEPAY_WEBHOOK_SECRET) {
+			reply.status(401).send({ error: "Unauthorized" });
+			return;
+		}
+
+		const signature = request.headers["x-webhook-signature"];
+		if (!signature || Array.isArray(signature)) {
+			reply.status(400).send({ error: "Missing X-Webhook-Signature" });
+			return;
+		}
+
+		const rawBody =
+			typeof request.body === "string" ? request.body : JSON.stringify(request.body ?? {});
+		const result = await processAbacatePayWebhook(rawBody, signature);
+		reply.status(result.status).send(result.body);
+	},
+);
+
+fastify.get("/api/payments/abacatepay/checkout/:checkoutId", async (request, reply) => {
+	const checkout = await getStoredAbacatePayCheckout(
+		(request.params as { checkoutId: string }).checkoutId,
+	);
+	if (!checkout) {
+		reply.status(404).send({ error: "Checkout not found" });
+		return;
+	}
+
+	reply.status(200).send({ data: checkout, success: true, error: null });
 });
 {{/if}}
 

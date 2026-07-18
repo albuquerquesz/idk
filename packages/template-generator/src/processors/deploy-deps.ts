@@ -11,10 +11,28 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
   const isDockerWeb = webDeploy === "docker";
   const isVercelWeb = webDeploy === "vercel";
   const isVercelServer = serverDeploy === "vercel";
+  const isGuaraCloudWeb = webDeploy === "guaracloud";
+  const isGuaraCloudServer = serverDeploy === "guaracloud";
   const isBackendSelf = backend === "self";
 
-  if (!isCloudflareWeb && !isCloudflareServer && !isDockerWeb && !isVercelWeb && !isVercelServer) {
+  if (
+    !isCloudflareWeb &&
+    !isCloudflareServer &&
+    !isDockerWeb &&
+    !isVercelWeb &&
+    !isVercelServer &&
+    !isGuaraCloudWeb &&
+    !isGuaraCloudServer
+  ) {
     return;
+  }
+
+  if (isGuaraCloudWeb || isGuaraCloudServer) {
+    addPackageDependency({
+      vfs,
+      packagePath: "package.json",
+      devDependencies: ["@guaracloud/cli"],
+    });
   }
 
   if (isVercelWeb || isVercelServer) {

@@ -5,10 +5,18 @@ import {
   BetterTStackConfigFileSchema,
   CLIInputSchema,
   CreateInputSchema,
+  ObservabilitySchema,
 } from "../../../packages/types/src/schemas";
 import { getSchemaResult, SchemaNameSchema } from "../src/index";
 
 describe("Input schemas", () => {
+  it("accepts GetMonitor as an observability provider", () => {
+    expect(ObservabilitySchema.safeParse("getmonitor").success).toBe(true);
+    expect(
+      CreateInputSchema.safeParse({ projectName: "app", observability: "getmonitor" }).success,
+    ).toBe(true);
+  });
+
   it("rejects conflicting manualDb and dbSetupOptions.mode inputs", () => {
     const result = CreateInputSchema.safeParse({
       projectName: "app",
@@ -116,6 +124,27 @@ describe("Input schemas", () => {
       projectDirectory: ".",
       projectName: "app",
       addons: ["biome"],
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts abacatepay as a payments provider", () => {
+    const result = CreateInputSchema.safeParse({
+      projectName: "app",
+      backend: "hono",
+      runtime: "bun",
+      database: "postgres",
+      orm: "drizzle",
+      auth: "better-auth",
+      payments: "abacatepay",
+      api: "trpc",
+      frontend: ["next"],
+      addons: ["none"],
+      examples: ["none"],
+      dbSetup: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
     });
 
     expect(result.success).toBe(true);

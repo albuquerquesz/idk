@@ -26,6 +26,13 @@ import { createContext } from "@{{projectName}}/api/context";
 {{#if (eq auth "better-auth")}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
+{{#if (eq payments "abacatepay")}}
+import {
+	createAbacatePayHostedCheckout,
+	getStoredAbacatePayCheckout,
+	processAbacatePayWebhook,
+} from "@{{projectName}}/payments/lib/abacatepay";
+{{/if}}
 
 {{#if (eq api "orpc")}}
 const rpcHandler = new RPCHandler(appRouter, {
@@ -95,6 +102,45 @@ const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}ne
 			return auth.handler(request);
 		}
 		return status(405)
+	})
+{{/if}}
+{{#if (eq payments "abacatepay")}}
+	.post("/api/payments/abacatepay/checkout", async ({ request, status }) => {
+		{{#if (eq auth "better-auth")}}
+		const session = await auth.api.getSession({
+			headers: request.headers,
+		});
+		const checkout = await createAbacatePayHostedCheckout({
+			userId: session?.user?.id ?? null,
+			customerEmail: session?.user?.email ?? null,
+		});
+		{{else}}
+		const checkout = await createAbacatePayHostedCheckout();
+		{{/if}}
+		return { data: checkout, success: true, error: null };
+	})
+	.post("/api/payments/abacatepay/webhook", async ({ request, status }) => {
+		const requestUrl = new URL(request.url);
+		if (requestUrl.searchParams.get("webhookSecret") !== env.ABACATEPAY_WEBHOOK_SECRET) {
+			return status(401, { error: "Unauthorized" });
+		}
+
+		const signature = request.headers.get("X-Webhook-Signature");
+		if (!signature) {
+			return status(400, { error: "Missing X-Webhook-Signature" });
+		}
+
+		const rawBody = await request.text();
+		const result = await processAbacatePayWebhook(rawBody, signature);
+		return status(result.status, result.body);
+	})
+	.get("/api/payments/abacatepay/checkout/:checkoutId", async ({ params, status }) => {
+		const checkout = await getStoredAbacatePayCheckout(params.checkoutId);
+		if (!checkout) {
+			return status(404, { error: "Checkout not found" });
+		}
+
+		return { data: checkout, success: true, error: null };
 	})
 {{/if}}
 {{#if (eq api "orpc")}}

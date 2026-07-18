@@ -9070,6 +9070,19 @@ import Layout from "../layouts/Layout.astro";
               <p class="text-white">Loading...</p>
             </div>
           </div>
+          {{else if (eq payments "abacatepay")}}
+          <div class="rounded-lg bg-neutral-800/50 p-4">
+            <p class="text-sm text-neutral-400 mb-2">Checkout</p>
+            <div class="space-y-2">
+              <p class="text-white">Open the hosted checkout to complete payment.</p>
+              <button
+                id="open-checkout"
+                class="rounded px-3 py-1.5 text-sm bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
+              >
+                Open Checkout
+              </button>
+            </div>
+          </div>
           {{/if}}
         </div>
       </div>
@@ -9089,6 +9102,9 @@ import Layout from "../layouts/Layout.astro";
   import { authClient } from "../lib/auth-client";
   {{#if (eq api "orpc")}}
   import { orpc } from "../lib/orpc";
+  {{/if}}
+  {{#if (and (eq payments "abacatepay") (ne backend "self"))}}
+  import { env } from "@{{projectName}}/env/web";
   {{/if}}
 
   const dashboardContent = document.getElementById("dashboard-content")!;
@@ -9157,6 +9173,22 @@ import Layout from "../layouts/Layout.astro";
       } catch (e) {
         console.error("Failed to load subscription info", e);
       }
+      {{else if (eq payments "abacatepay")}}
+      document.getElementById("open-checkout")?.addEventListener("click", async () => {
+        try {
+          const baseUrl = {{#if (eq backend "self")}}""{{else}}env.PUBLIC_SERVER_URL{{/if}};
+          const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+            method: "POST",
+          });
+          if (!response.ok) return;
+          const payload = await response.json() as { data?: { url?: string } };
+          if (payload.data?.url) {
+            window.location.href = payload.data.url;
+          }
+        } catch (e) {
+          console.error("Failed to open checkout", e);
+        }
+      });
       {{/if}}
 
       loading.classList.add("hidden");
@@ -9430,8 +9462,8 @@ const handleSignOut = async () => {
 {{#if (eq api "orpc")}}
 import { useQuery } from '@tanstack/vue-query'
 {{/if}}
-
 const { $authClient, $orpc } = useNuxtApp()
+const runtimeConfig = useRuntimeConfig()
 
 definePageMeta({
   middleware: ['auth']
@@ -9461,6 +9493,19 @@ onMounted(async () => {
 const hasProSubscription = computed(() => 
   (customerState.value?.activeSubscriptions?.length ?? 0) > 0
 )
+{{else if (eq payments "abacatepay")}}
+const openCheckout = async () => {
+  const baseUrl = {{#if (eq backend "self")}}""{{else}}runtimeConfig.public.serverUrl{{/if}}
+  const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+    method: 'POST',
+  })
+  if (!response.ok) return
+
+  const payload = (await response.json()) as { data?: { url?: string } }
+  if (payload.data?.url) {
+    window.location.href = payload.data.url
+  }
+}
 {{/if}}
 </script>
 
@@ -9518,6 +9563,19 @@ const hasProSubscription = computed(() =>
             @click="() => { $authClient.checkout({ slug: 'pro' }) }"
           >
             Upgrade to Pro
+          </UButton>
+        </div>
+      </UCard>
+      {{else if (eq payments "abacatepay")}}
+      <UCard>
+        <template #header>
+          <div class="font-medium">Checkout</div>
+        </template>
+
+        <div class="flex items-center justify-between gap-4">
+          <p class="text-sm text-muted">Open the hosted checkout to complete payment.</p>
+          <UButton @click="openCheckout">
+            Open Checkout
           </UButton>
         </div>
       </UCard>
@@ -9598,6 +9656,9 @@ export const authClient = createAuthClient({
   ["auth/better-auth/web/react/next/src/app/dashboard/dashboard.tsx.hbs", `"use client";
 {{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
+{{else if (eq payments "abacatepay")}}
+import { Button } from "@{{projectName}}/ui/components/button";
+import { env } from "@{{projectName}}/env/web";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "orpc")}}
@@ -9650,6 +9711,22 @@ export default function Dashboard({
 					Upgrade to Pro
 				</Button>
 			)}
+			{{else if (eq payments "abacatepay")}}
+			<Button
+				onClick={async () => {
+					const baseUrl = {{#if (eq backend "self")}}""{{else}}env.NEXT_PUBLIC_SERVER_URL{{/if}};
+					const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+						method: "POST",
+					});
+					if (!response.ok) return;
+					const payload = (await response.json()) as { data?: { url?: string } };
+					if (payload.data?.url) {
+						window.location.href = payload.data.url;
+					}
+				}}
+			>
+				Open Checkout
+			</Button>
 			{{/if}}
 		</>
 	);
@@ -10442,6 +10519,9 @@ export default function UserMenu() {
 `],
   ["auth/better-auth/web/react/react-router/src/routes/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
+{{else if (eq payments "abacatepay")}}
+import { Button } from "@{{projectName}}/ui/components/button";
+import { env } from "@{{projectName}}/env/web";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "orpc")}}
@@ -10515,6 +10595,22 @@ export default function Dashboard() {
           Upgrade to Pro
         </Button>
       )}
+      {{else if (eq payments "abacatepay")}}
+      <Button
+        onClick={async () => {
+          const baseUrl = {{#if (eq backend "self")}}""{{else}}env.VITE_SERVER_URL{{/if}};
+          const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+            method: "POST",
+          });
+          if (!response.ok) return;
+          const payload = (await response.json()) as { data?: { url?: string } };
+          if (payload.data?.url) {
+            window.location.href = payload.data.url;
+          }
+        }}
+      >
+        Open Checkout
+      </Button>
       {{/if}}
     </div>
   );
@@ -10898,6 +10994,9 @@ export default function UserMenu() {
   ["auth/better-auth/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
+{{else if (eq payments "abacatepay")}}
+import { Button } from "@{{projectName}}/ui/components/button";
+import { env } from "@{{projectName}}/env/web";
 {{/if}}
 {{#if (eq api "orpc")}}
 import { orpc } from "@/utils/orpc";
@@ -10946,6 +11045,22 @@ function RouteComponent() {
 					Upgrade to Pro
 				</Button>
 			)}
+			{{else if (eq payments "abacatepay")}}
+			<Button
+				onClick={async () => {
+					const baseUrl = {{#if (eq backend "self")}}""{{else}}env.VITE_SERVER_URL{{/if}};
+					const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+						method: "POST",
+					});
+					if (!response.ok) return;
+					const payload = (await response.json()) as { data?: { url?: string } };
+					if (payload.data?.url) {
+						window.location.href = payload.data.url;
+					}
+				}}
+			>
+				Open Checkout
+			</Button>
 			{{/if}}
 		</div>
 	);
@@ -11401,6 +11516,9 @@ export const authMiddleware = createMiddleware().server(
   ["auth/better-auth/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `{{#if (eq payments "polar") }}
 import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
+{{else if (eq payments "abacatepay") }}
+import { Button } from "@{{projectName}}/ui/components/button";
+import { env } from "@{{projectName}}/env/web";
 {{/if}}
 {{#if (eq api "trpc") }}
 import { useTRPC } from "@/utils/trpc";
@@ -11463,6 +11581,22 @@ function RouteComponent() {
           Upgrade to Pro
         </Button>
       )}
+      {{else if (eq payments "abacatepay") }}
+      <Button
+        onClick={async function handleCheckout() {
+          const baseUrl = {{#if (eq backend "self")}}""{{else}}env.VITE_SERVER_URL{{/if}};
+          const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+            method: "POST",
+          });
+          if (!response.ok) return;
+          const payload = (await response.json()) as { data?: { url?: string } };
+          if (payload.data?.url) {
+            window.location.href = payload.data.url;
+          }
+        }}
+      >
+        Open Checkout
+      </Button>
       {{/if}}
     </div>
   );
@@ -11887,7 +12021,10 @@ export const authClient = createAuthClient({
 		baseURL: new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(),
 });
 `],
-  ["auth/better-auth/web/solid/src/routes/dashboard.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/web/solid/src/routes/dashboard.tsx.hbs", `{{#if (eq payments "abacatepay")}}
+import { env } from "@{{projectName}}/env/web";
+{{/if}}
+import { authClient } from "@/lib/auth-client";
 {{#if (eq api "orpc")}}
 import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/solid-query";
@@ -11950,6 +12087,22 @@ function RouteComponent() {
 					Upgrade to Pro
 				</button>
 			)}
+			{{else if (eq payments "abacatepay")}}
+			<button
+				onClick={async () => {
+					const baseUrl = {{#if (eq backend "self")}}""{{else}}env.VITE_SERVER_URL{{/if}};
+					const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+						method: "POST",
+					});
+					if (!response.ok) return;
+					const payload = (await response.json()) as { data?: { url?: string } };
+					if (payload.data?.url) {
+						window.location.href = payload.data.url;
+					}
+				}}
+			>
+				Open Checkout
+			</button>
 			{{/if}}
 		</div>
 	);
@@ -12309,6 +12462,9 @@ export const authClient = createAuthClient({
   ["auth/better-auth/web/svelte/src/routes/dashboard/+page.svelte.hbs", `<script lang="ts">
 	import { goto } from '$app/navigation';
 	import { authClient } from '$lib/auth-client';
+	{{#if (eq payments "abacatepay")}}
+	import { env } from '$env/dynamic/public';
+	{{/if}}
 	{{#if (eq api "orpc")}}
 	import { orpc } from '$lib/orpc';
 	import { createQuery } from '@tanstack/svelte-query';
@@ -12337,6 +12493,19 @@ export const authClient = createAuthClient({
 			});
 		}
 	});
+	{{else if (eq payments "abacatepay")}}
+	async function openCheckout() {
+		const baseUrl = {{#if (eq backend "self")}}''{{else}}env.PUBLIC_SERVER_URL{{/if}};
+		const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+			method: 'POST',
+		});
+		if (!response.ok) return;
+
+		const payload = (await response.json()) as { data?: { url?: string } };
+		if (payload.data?.url) {
+			window.location.href = payload.data.url;
+		}
+	}
 	{{/if}}
 </script>
 
@@ -12362,6 +12531,10 @@ export const authClient = createAuthClient({
 				Upgrade to Pro
 			</button>
 		{/if}
+		{{else if (eq payments "abacatepay")}}
+		<button onclick={openCheckout}>
+			Open Checkout
+		</button>
 		{{/if}}
 	</div>
 {/if}
@@ -14302,6 +14475,13 @@ import { createContext } from "@{{projectName}}/api/context";
 {{#if (eq auth "better-auth")}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
+{{#if (eq payments "abacatepay")}}
+import {
+	createAbacatePayHostedCheckout,
+	getStoredAbacatePayCheckout,
+	processAbacatePayWebhook,
+} from "@{{projectName}}/payments/lib/abacatepay";
+{{/if}}
 
 {{#if (eq api "orpc")}}
 const rpcHandler = new RPCHandler(appRouter, {
@@ -14371,6 +14551,45 @@ const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}ne
 			return auth.handler(request);
 		}
 		return status(405)
+	})
+{{/if}}
+{{#if (eq payments "abacatepay")}}
+	.post("/api/payments/abacatepay/checkout", async ({ request, status }) => {
+		{{#if (eq auth "better-auth")}}
+		const session = await auth.api.getSession({
+			headers: request.headers,
+		});
+		const checkout = await createAbacatePayHostedCheckout({
+			userId: session?.user?.id ?? null,
+			customerEmail: session?.user?.email ?? null,
+		});
+		{{else}}
+		const checkout = await createAbacatePayHostedCheckout();
+		{{/if}}
+		return { data: checkout, success: true, error: null };
+	})
+	.post("/api/payments/abacatepay/webhook", async ({ request, status }) => {
+		const requestUrl = new URL(request.url);
+		if (requestUrl.searchParams.get("webhookSecret") !== env.ABACATEPAY_WEBHOOK_SECRET) {
+			return status(401, { error: "Unauthorized" });
+		}
+
+		const signature = request.headers.get("X-Webhook-Signature");
+		if (!signature) {
+			return status(400, { error: "Missing X-Webhook-Signature" });
+		}
+
+		const rawBody = await request.text();
+		const result = await processAbacatePayWebhook(rawBody, signature);
+		return status(result.status, result.body);
+	})
+	.get("/api/payments/abacatepay/checkout/:checkoutId", async ({ params, status }) => {
+		const checkout = await getStoredAbacatePayCheckout(params.checkoutId);
+		if (!checkout) {
+			return status(404, { error: "Checkout not found" });
+		}
+
+		return { data: checkout, success: true, error: null };
 	})
 {{/if}}
 {{#if (eq api "orpc")}}
@@ -14474,6 +14693,13 @@ import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { auth } from "@{{projectName}}/auth";
 import { toNodeHandler } from "better-auth/node";
 {{/if}}
+{{#if (eq payments "abacatepay")}}
+import {
+	createAbacatePayHostedCheckout,
+	getStoredAbacatePayCheckout,
+	processAbacatePayWebhook,
+} from "@{{projectName}}/payments/lib/abacatepay";
+{{/if}}
 {{#if (eq auth "clerk")}}
 import { clerkMiddleware } from "@clerk/express";
 {{/if}}
@@ -14499,6 +14725,63 @@ app.use(clerkMiddleware());
 
 {{#if (eq auth "better-auth")}}
 app.all("/api/auth{/*path}", toNodeHandler(auth));
+{{/if}}
+
+{{#if (eq payments "abacatepay")}}
+app.post("/api/payments/abacatepay/checkout", async (_req, res) => {
+	{{#if (eq auth "better-auth")}}
+	const headers = new Headers();
+	Object.entries(_req.headers).forEach(([key, value]) => {
+		if (Array.isArray(value)) {
+			for (const entry of value) headers.append(key, entry);
+			return;
+		}
+		if (value) headers.append(key, value);
+	});
+
+	const session = await auth.api.getSession({
+		headers,
+	});
+	const checkout = await createAbacatePayHostedCheckout({
+		userId: session?.user?.id ?? null,
+		customerEmail: session?.user?.email ?? null,
+	});
+	{{else}}
+	const checkout = await createAbacatePayHostedCheckout();
+	{{/if}}
+	res.status(200).json({ data: checkout, success: true, error: null });
+});
+
+app.post(
+	"/api/payments/abacatepay/webhook",
+	express.text({ type: "*/*" }),
+	async (req, res) => {
+		const requestUrl = new URL(req.originalUrl, env.BETTER_AUTH_URL);
+		if (requestUrl.searchParams.get("webhookSecret") !== env.ABACATEPAY_WEBHOOK_SECRET) {
+			res.status(401).json({ error: "Unauthorized" });
+			return;
+		}
+
+		const signature = req.header("X-Webhook-Signature");
+		if (!signature) {
+			res.status(400).json({ error: "Missing X-Webhook-Signature" });
+			return;
+		}
+
+		const result = await processAbacatePayWebhook(req.body, signature);
+		res.status(result.status).json(result.body);
+	},
+);
+
+app.get("/api/payments/abacatepay/checkout/:checkoutId", async (req, res) => {
+	const checkout = await getStoredAbacatePayCheckout(req.params.checkoutId);
+	if (!checkout) {
+		res.status(404).json({ error: "Checkout not found" });
+		return;
+	}
+
+	res.status(200).json({ data: checkout, success: true, error: null });
+});
 {{/if}}
 
 {{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
@@ -14630,6 +14913,13 @@ import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 {{#if (eq auth "better-auth")}}
 import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{#if (eq payments "abacatepay")}}
+import {
+	createAbacatePayHostedCheckout,
+	getStoredAbacatePayCheckout,
+	processAbacatePayWebhook,
+} from "@{{projectName}}/payments/lib/abacatepay";
 {{/if}}
 {{#if (eq auth "clerk")}}
 import { clerkPlugin } from "@clerk/fastify";
@@ -14773,6 +15063,65 @@ fastify.route({
 });
 {{/if}}
 
+{{#if (eq payments "abacatepay")}}
+fastify.post("/api/payments/abacatepay/checkout", async (request, reply) => {
+	{{#if (eq auth "better-auth")}}
+	const headers = new Headers();
+	Object.entries(request.headers).forEach(([key, value]) => {
+		if (value) headers.append(key, value.toString());
+	});
+
+	const session = await auth.api.getSession({ headers });
+	const checkout = await createAbacatePayHostedCheckout({
+		userId: session?.user?.id ?? null,
+		customerEmail: session?.user?.email ?? null,
+	});
+	{{else}}
+	const checkout = await createAbacatePayHostedCheckout();
+	{{/if}}
+	reply.status(200).send({ data: checkout, success: true, error: null });
+});
+
+fastify.post(
+	"/api/payments/abacatepay/webhook",
+	{
+		config: {
+			rawBody: true,
+		},
+	},
+	async (request, reply) => {
+		const requestUrl = new URL(request.url, env.BETTER_AUTH_URL);
+		if (requestUrl.searchParams.get("webhookSecret") !== env.ABACATEPAY_WEBHOOK_SECRET) {
+			reply.status(401).send({ error: "Unauthorized" });
+			return;
+		}
+
+		const signature = request.headers["x-webhook-signature"];
+		if (!signature || Array.isArray(signature)) {
+			reply.status(400).send({ error: "Missing X-Webhook-Signature" });
+			return;
+		}
+
+		const rawBody =
+			typeof request.body === "string" ? request.body : JSON.stringify(request.body ?? {});
+		const result = await processAbacatePayWebhook(rawBody, signature);
+		reply.status(result.status).send(result.body);
+	},
+);
+
+fastify.get("/api/payments/abacatepay/checkout/:checkoutId", async (request, reply) => {
+	const checkout = await getStoredAbacatePayCheckout(
+		(request.params as { checkoutId: string }).checkoutId,
+	);
+	if (!checkout) {
+		reply.status(404).send({ error: "Checkout not found" });
+		return;
+	}
+
+	reply.status(200).send({ data: checkout, success: true, error: null });
+});
+{{/if}}
+
 {{#if (eq api "trpc")}}
 fastify.register(fastifyTRPCPlugin, {
 	prefix: "/trpc",
@@ -14843,6 +15192,13 @@ import { createAuth } from "@{{projectName}}/auth";
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
+{{#if (eq payments "abacatepay")}}
+import {
+	createAbacatePayHostedCheckout,
+	getStoredAbacatePayCheckout,
+	processAbacatePayWebhook,
+} from "@{{projectName}}/payments/lib/abacatepay";
+{{/if}}
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -14885,6 +15241,48 @@ app.on(
 		auth.handler(c.req.raw)
 {{/if}}
 );
+{{/if}}
+
+{{#if (eq payments "abacatepay")}}
+app.post("/api/payments/abacatepay/checkout", async (c) => {
+	{{#if (eq auth "better-auth")}}
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+		headers: c.req.raw.headers,
+	});
+	const checkout = await createAbacatePayHostedCheckout({
+		userId: session?.user?.id ?? null,
+		customerEmail: session?.user?.email ?? null,
+	});
+	{{else}}
+	const checkout = await createAbacatePayHostedCheckout();
+	{{/if}}
+	return c.json({ data: checkout, success: true, error: null });
+});
+
+app.post("/api/payments/abacatepay/webhook", async (c) => {
+	const requestUrl = new URL(c.req.url);
+	if (requestUrl.searchParams.get("webhookSecret") !== env.ABACATEPAY_WEBHOOK_SECRET) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
+
+	const signature = c.req.header("X-Webhook-Signature");
+	if (!signature) {
+		return c.json({ error: "Missing X-Webhook-Signature" }, 400);
+	}
+
+	const rawBody = await c.req.text();
+	const result = await processAbacatePayWebhook(rawBody, signature);
+	return c.json(result.body, result.status);
+});
+
+app.get("/api/payments/abacatepay/checkout/:checkoutId", async (c) => {
+	const checkout = await getStoredAbacatePayCheckout(c.req.param("checkoutId"));
+	if (!checkout) {
+		return c.json({ error: "Checkout not found" }, 404);
+	}
+
+	return c.json({ data: checkout, success: true, error: null });
+});
 {{/if}}
 
 {{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
@@ -15247,10 +15645,14 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   ["db/drizzle/base/src/schema/index.ts.hbs", `{{#if (eq auth "better-auth")}}
 export * from "./auth";
 {{/if}}
+{{#if (eq payments "abacatepay")}}
+export * from "./abacatepay";
+{{/if}}
 {{#if (includes examples "todo")}}
 export * from "./todo";
 {{/if}}
-export {};`],
+export {};
+`],
   ["db/drizzle/mysql/drizzle.config.ts.hbs", `import { defineConfig } from "drizzle-kit";
 import dotenv from "dotenv";
 
@@ -25738,6 +26140,17 @@ const TITLE_TEXT = \`
         </div>
       </section>
       {{/if}}
+      {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+      <section class="rounded-lg border border-neutral-700 p-4">
+        <h2 class="mb-2 font-medium text-white">Hosted Checkout</h2>
+        <p class="mb-4 text-sm text-neutral-400">
+          Launch a sample AbacatePay checkout without requiring sign-in.
+        </p>
+        <button class="rounded-md border border-neutral-700 px-4 py-2 text-sm text-white" id="open-checkout">
+          Open Checkout
+        </button>
+      </section>
+      {{/if}}
     </div>
   </div>
 </Layout>
@@ -25761,6 +26174,23 @@ const TITLE_TEXT = \`
   }
 
   checkHealth();
+</script>
+{{/if}}
+{{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+<script>
+  const checkoutButton = document.getElementById("open-checkout");
+
+  checkoutButton?.addEventListener("click", async () => {
+    const baseUrl = {{#if (eq backend "self")}}""{{else}}"\${import.meta.env.PUBLIC_SERVER_URL}"{{/if}};
+    const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+      method: "POST",
+    });
+    if (!response.ok) return;
+    const payload = await response.json();
+    if (payload?.data?.url) {
+      window.location.href = payload.data.url;
+    }
+  });
 </script>
 {{/if}}
 `],
@@ -29577,6 +30007,9 @@ import { useConvexQuery } from "convex-vue";
 const { $orpc } = useNuxtApp()
 import { useQuery } from '@tanstack/vue-query'
   {{/unless}}
+  {{#if (eq payments "abacatepay")}}
+const config = useRuntimeConfig()
+  {{/if}}
 {{/if}}
 
 const TITLE_TEXT = \`
@@ -29607,6 +30040,22 @@ onServerPrefetch(async () => {
   } catch {}
 })
   {{/unless}}
+{{/if}}
+{{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+
+async function openCheckout() {
+  const baseUrl = {{#if (eq backend "self")}}""{{else}}config.public.serverUrl{{/if}}
+  const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+    method: "POST",
+  })
+  if (!response.ok) return
+  const payload = await response.json() as { data?: { url?: string } }
+  if (payload.data?.url) {
+    await navigateTo(payload.data.url, {
+      external: true,
+    })
+  }
+}
 {{/if}}
 </script>
 
@@ -29668,6 +30117,20 @@ onServerPrefetch(async () => {
         {{/unless}}
         {{/if}}
       </UCard>
+      {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+      <UCard>
+        <template #header>
+          <div class="font-medium">Hosted Checkout</div>
+        </template>
+
+        <p class="mb-4 text-sm text-muted">
+          Launch a sample AbacatePay checkout without requiring sign-in.
+        </p>
+        <UButton @click="openCheckout">
+          Open Checkout
+        </UButton>
+      </UCard>
+      {{/if}}
     </div>
   </UContainer>
 </template>
@@ -29903,6 +30366,9 @@ export default function RootLayout({
 {{/if}}
 `],
   ["frontend/react/next/src/app/page.tsx.hbs", `"use client"
+{{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+import { env } from "@{{projectName}}/env/web";
+{{/if}}
 {{#if (eq backend "convex")}}
 import { useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
@@ -29939,6 +30405,19 @@ export default function Home() {
   const healthCheck = useQuery(orpc.healthCheck.queryOptions());
   {{else if (eq api "trpc")}}
   const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+  {{/if}}
+  {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+  async function openCheckout() {
+    const baseUrl = {{#if (eq backend "self")}}""{{else}}env.NEXT_PUBLIC_SERVER_URL{{/if}};
+    const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+      method: "POST",
+    });
+    if (!response.ok) return;
+    const payload = (await response.json()) as { data?: { url?: string } };
+    if (payload.data?.url) {
+      window.location.href = payload.data.url;
+    }
+  }
   {{/if}}
 
   return (
@@ -29977,6 +30456,17 @@ export default function Home() {
             {{/unless}}
           {{/if}}
         </section>
+        {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+        <section className="rounded-lg border p-4">
+          <h2 className="mb-2 font-medium">Hosted Checkout</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Launch a sample AbacatePay checkout without requiring sign-in.
+          </p>
+          <button className="rounded-md border px-4 py-2 text-sm font-medium" onClick={openCheckout}>
+            Open Checkout
+          </button>
+        </section>
+        {{/if}}
       </div>
     </div>
   );
@@ -30591,6 +31081,9 @@ import { flatRoutes } from "@react-router/fs-routes";
 export default flatRoutes() satisfies RouteConfig;
 `],
   ["frontend/react/react-router/src/routes/_index.tsx.hbs", `import type { Route } from "./+types/_index";
+{{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+import { env } from "@{{projectName}}/env/web";
+{{/if}}
 {{#if (eq backend "convex")}}
 import { useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
@@ -30632,6 +31125,19 @@ export default function Home() {
   {{else if (eq api "trpc")}}
   const healthCheck = useQuery(trpc.healthCheck.queryOptions());
   {{/if}}
+  {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+  async function openCheckout() {
+    const baseUrl = {{#if (eq backend "self")}}""{{else}}env.VITE_SERVER_URL{{/if}};
+    const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+      method: "POST",
+    });
+    if (!response.ok) return;
+    const payload = (await response.json()) as { data?: { url?: string } };
+    if (payload.data?.url) {
+      window.location.href = payload.data.url;
+    }
+  }
+  {{/if}}
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-2">
@@ -30671,6 +31177,17 @@ export default function Home() {
             {{/unless}}
           {{/if}}
         </section>
+        {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+        <section className="rounded-lg border p-4">
+          <h2 className="mb-2 font-medium">Hosted Checkout</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Launch a sample AbacatePay checkout without requiring sign-in.
+          </p>
+          <button className="rounded-md border px-4 py-2 text-sm font-medium" onClick={openCheckout}>
+            Open Checkout
+          </button>
+        </section>
+        {{/if}}
       </div>
     </div>
   );
@@ -31059,6 +31576,9 @@ function RootComponent() {
 }
 `],
   ["frontend/react/tanstack-router/src/routes/index.tsx.hbs", `import { createFileRoute } from "@tanstack/react-router";
+{{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+import { env } from "@{{projectName}}/env/web";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/react-query";
@@ -31102,6 +31622,19 @@ function HomeComponent() {
   {{#if (eq backend "convex")}}
   const healthCheck = useQuery(api.healthCheck.get);
   {{/if}}
+  {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+  async function openCheckout() {
+    const baseUrl = {{#if (eq backend "self")}}""{{else}}env.VITE_SERVER_URL{{/if}};
+    const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+      method: "POST",
+    });
+    if (!response.ok) return;
+    const payload = (await response.json()) as { data?: { url?: string } };
+    if (payload.data?.url) {
+      window.location.href = payload.data.url;
+    }
+  }
+  {{/if}}
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-2">
@@ -31139,6 +31672,17 @@ function HomeComponent() {
             {{/unless}}
           {{/if}}
         </section>
+        {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+        <section className="rounded-lg border p-4">
+          <h2 className="mb-2 font-medium">Hosted Checkout</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Launch a sample AbacatePay checkout without requiring sign-in.
+          </p>
+          <button className="rounded-md border px-4 py-2 text-sm font-medium" onClick={openCheckout}>
+            Open Checkout
+          </button>
+        </section>
+        {{/if}}
       </div>
     </div>
   );
@@ -31644,6 +32188,9 @@ function RootDocument() {
 }
 `],
   ["frontend/react/tanstack-start/src/routes/index.tsx.hbs", `import { createFileRoute } from "@tanstack/react-router";
+{{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+import { env } from "@{{projectName}}/env/web";
+{{/if}}
 {{#if (eq backend "convex")}}
 import { convexQuery } from "@convex-dev/react-query";
 import { useQuery } from "@tanstack/react-query";
@@ -31687,6 +32234,19 @@ function HomeComponent() {
   {{else if (eq api "orpc")}}
   const healthCheck = useQuery(orpc.healthCheck.queryOptions());
   {{/if}}
+  {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+  async function openCheckout() {
+    const baseUrl = {{#if (eq backend "self")}}""{{else}}env.VITE_SERVER_URL{{/if}};
+    const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+      method: "POST",
+    });
+    if (!response.ok) return;
+    const payload = (await response.json()) as { data?: { url?: string } };
+    if (payload.data?.url) {
+      window.location.href = payload.data.url;
+    }
+  }
+  {{/if}}
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-2">
@@ -31724,6 +32284,17 @@ function HomeComponent() {
             {{/unless}}
           {{/if}}
         </section>
+        {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+        <section className="rounded-lg border p-4">
+          <h2 className="mb-2 font-medium">Hosted Checkout</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Launch a sample AbacatePay checkout without requiring sign-in.
+          </p>
+          <button className="rounded-md border px-4 py-2 text-sm font-medium" onClick={openCheckout}>
+            Open Checkout
+          </button>
+        </section>
+        {{/if}}
       </div>
     </div>
   );
@@ -32159,6 +32730,9 @@ function RootComponent() {
 }
 `],
   ["frontend/solid/src/routes/index.tsx.hbs", `import { createFileRoute } from "@tanstack/solid-router";
+{{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+import { env } from "@{{projectName}}/env/web";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/solid-query";
 import { orpc } from "../utils/orpc";
@@ -32189,6 +32763,19 @@ const TITLE_TEXT = \`
 function App() {
   {{#if (eq api "orpc")}}
   const healthCheck = useQuery(() => orpc.healthCheck.queryOptions());
+  {{/if}}
+  {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+  async function openCheckout() {
+    const baseUrl = {{#if (eq backend "self")}}""{{else}}env.VITE_SERVER_URL{{/if}};
+    const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+      method: "POST",
+    });
+    if (!response.ok) return;
+    const payload = (await response.json()) as { data?: { url?: string } };
+    if (payload.data?.url) {
+      window.location.href = payload.data.url;
+    }
+  }
   {{/if}}
 
   return (
@@ -32224,6 +32811,17 @@ function App() {
               </div>
             </Match>
           </Switch>
+        </section>
+        {{/if}}
+        {{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+        <section class="rounded-lg border p-4">
+          <h2 class="mb-2 font-medium">Hosted Checkout</h2>
+          <p class="mb-4 text-sm text-muted-foreground">
+            Launch a sample AbacatePay checkout without requiring sign-in.
+          </p>
+          <button class="rounded-md border px-4 py-2 text-sm font-medium" onClick={openCheckout}>
+            Open Checkout
+          </button>
         </section>
         {{/if}}
       </div>
@@ -32538,6 +33136,9 @@ import { orpc } from "$lib/orpc";
 import { createQuery } from "@tanstack/svelte-query";
 const healthCheck = createQuery(() => orpc.healthCheck.queryOptions());
 {{/if}}
+{{#if (and (eq payments "abacatepay") (ne backend "self"))}}
+import { env } from "@{{projectName}}/env/web";
+{{/if}}
 
 const TITLE_TEXT = \`
    ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -32554,6 +33155,20 @@ const TITLE_TEXT = \`
       ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
       ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
    \`;
+
+{{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+async function openCheckout() {
+	const baseUrl = {{#if (eq backend "self")}}""{{else}}env.PUBLIC_SERVER_URL{{/if}};
+	const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout\`, {
+		method: "POST",
+	});
+	if (!response.ok) return;
+	const payload = (await response.json()) as { data?: { url?: string } };
+	if (payload.data?.url) {
+		window.location.href = payload.data.url;
+	}
+}
+{{/if}}
 </script>
 
 <div class="container mx-auto max-w-3xl px-4 py-2">
@@ -32576,6 +33191,17 @@ const TITLE_TEXT = \`
 			</div>
 		</section>
 	    {{/if}}
+		{{#if (and (eq payments "abacatepay") (ne backend "convex"))}}
+		<section class="rounded-lg border p-4">
+			<h2 class="mb-2 font-medium">Hosted Checkout</h2>
+			<p class="text-muted-foreground mb-4 text-sm">
+				Launch a sample AbacatePay checkout without requiring sign-in.
+			</p>
+			<button class="rounded-md border px-4 py-2 text-sm font-medium" on:click={openCheckout}>
+				Open Checkout
+			</button>
+		</section>
+		{{/if}}
 	</div>
 </div>
 {{/if}}
@@ -32901,6 +33527,13 @@ export const env = createEnv({
 		POLAR_ACCESS_TOKEN: z.string().min(1),
 		POLAR_SUCCESS_URL: z.url(),
 {{/if}}
+{{#if (eq payments "abacatepay")}}
+		ABACATEPAY_API_KEY: z.string().min(1),
+		ABACATEPAY_WEBHOOK_SECRET: z.string().min(1),
+		ABACATEPAY_PUBLIC_KEY: z.string().min(1),
+		ABACATEPAY_RETURN_URL: z.url(),
+		ABACATEPAY_COMPLETION_URL: z.url(),
+{{/if}}
 		CORS_ORIGIN: z.url(),
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
@@ -33135,6 +33768,13 @@ export const server = await Worker("server", {
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
     {{/if}}
+    {{#if (eq payments "abacatepay")}}
+    ABACATEPAY_API_KEY: alchemy.secret.env.ABACATEPAY_API_KEY!,
+    ABACATEPAY_WEBHOOK_SECRET: alchemy.secret.env.ABACATEPAY_WEBHOOK_SECRET!,
+    ABACATEPAY_PUBLIC_KEY: alchemy.secret.env.ABACATEPAY_PUBLIC_KEY!,
+    ABACATEPAY_RETURN_URL: alchemy.env.ABACATEPAY_RETURN_URL!,
+    ABACATEPAY_COMPLETION_URL: alchemy.env.ABACATEPAY_COMPLETION_URL!,
+    {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
     {{/if}}
@@ -33193,6 +33833,13 @@ export const web = await Nextjs("web", {
     {{#if (eq payments "polar")}}
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq payments "abacatepay")}}
+    ABACATEPAY_API_KEY: alchemy.secret.env.ABACATEPAY_API_KEY!,
+    ABACATEPAY_WEBHOOK_SECRET: alchemy.secret.env.ABACATEPAY_WEBHOOK_SECRET!,
+    ABACATEPAY_PUBLIC_KEY: alchemy.secret.env.ABACATEPAY_PUBLIC_KEY!,
+    ABACATEPAY_RETURN_URL: alchemy.env.ABACATEPAY_RETURN_URL!,
+    ABACATEPAY_COMPLETION_URL: alchemy.env.ABACATEPAY_COMPLETION_URL!,
     {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
@@ -33253,6 +33900,13 @@ export const web = await Nuxt("web", {
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
     {{/if}}
+    {{#if (eq payments "abacatepay")}}
+    ABACATEPAY_API_KEY: alchemy.secret.env.ABACATEPAY_API_KEY!,
+    ABACATEPAY_WEBHOOK_SECRET: alchemy.secret.env.ABACATEPAY_WEBHOOK_SECRET!,
+    ABACATEPAY_PUBLIC_KEY: alchemy.secret.env.ABACATEPAY_PUBLIC_KEY!,
+    ABACATEPAY_RETURN_URL: alchemy.env.ABACATEPAY_RETURN_URL!,
+    ABACATEPAY_COMPLETION_URL: alchemy.env.ABACATEPAY_COMPLETION_URL!,
+    {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
     {{/if}}
@@ -33299,6 +33953,13 @@ export const web = await SvelteKit("web", {
     {{#if (eq payments "polar")}}
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq payments "abacatepay")}}
+    ABACATEPAY_API_KEY: alchemy.secret.env.ABACATEPAY_API_KEY!,
+    ABACATEPAY_WEBHOOK_SECRET: alchemy.secret.env.ABACATEPAY_WEBHOOK_SECRET!,
+    ABACATEPAY_PUBLIC_KEY: alchemy.secret.env.ABACATEPAY_PUBLIC_KEY!,
+    ABACATEPAY_RETURN_URL: alchemy.env.ABACATEPAY_RETURN_URL!,
+    ABACATEPAY_COMPLETION_URL: alchemy.env.ABACATEPAY_COMPLETION_URL!,
     {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
@@ -33356,6 +34017,13 @@ export const web = await TanStackStart("web", {
     {{#if (eq payments "polar")}}
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq payments "abacatepay")}}
+    ABACATEPAY_API_KEY: alchemy.secret.env.ABACATEPAY_API_KEY!,
+    ABACATEPAY_WEBHOOK_SECRET: alchemy.secret.env.ABACATEPAY_WEBHOOK_SECRET!,
+    ABACATEPAY_PUBLIC_KEY: alchemy.secret.env.ABACATEPAY_PUBLIC_KEY!,
+    ABACATEPAY_RETURN_URL: alchemy.env.ABACATEPAY_RETURN_URL!,
+    ABACATEPAY_COMPLETION_URL: alchemy.env.ABACATEPAY_COMPLETION_URL!,
     {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
@@ -33456,6 +34124,13 @@ export const web = await Astro("web", {
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
     {{/if}}
+    {{#if (eq payments "abacatepay")}}
+    ABACATEPAY_API_KEY: alchemy.secret.env.ABACATEPAY_API_KEY!,
+    ABACATEPAY_WEBHOOK_SECRET: alchemy.secret.env.ABACATEPAY_WEBHOOK_SECRET!,
+    ABACATEPAY_PUBLIC_KEY: alchemy.secret.env.ABACATEPAY_PUBLIC_KEY!,
+    ABACATEPAY_RETURN_URL: alchemy.env.ABACATEPAY_RETURN_URL!,
+    ABACATEPAY_COMPLETION_URL: alchemy.env.ABACATEPAY_COMPLETION_URL!,
+    {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
     {{/if}}
@@ -33491,6 +34166,37 @@ await app.finalize();
     "dev": "alchemy dev",
     "deploy": "alchemy deploy",
     "destroy": "alchemy destroy"
+  }
+}
+`],
+  ["packages/payments/package.json.hbs", `{
+  "name": "@{{projectName}}/payments",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "devDependencies": {}
+}
+`],
+  ["packages/payments/src/index.ts.hbs", `{{#if (eq payments "abacatepay")}}
+export * from "./lib/abacatepay";
+{{/if}}
+export {};
+`],
+  ["packages/payments/tsconfig.json.hbs", `{
+  "extends": "@{{projectName}}/config/tsconfig.base.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "composite": true
   }
 }
 `],
@@ -35278,6 +35984,1388 @@ export function cn(...inputs: ClassValue[]) {
   "exclude": ["node_modules"]
 }
 `],
+  ["payments/abacatepay/db/drizzle/mysql/src/abacatepay.ts.hbs", `import { eq } from "drizzle-orm";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { env } from "@{{projectName}}/env/server";
+{{/if}}
+import { createDb{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}, db{{/if}} } from "./index";
+import { abacatePayCheckout, abacatePayWebhookEvent } from "./schema/abacatepay";
+
+function getDb() {
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+	return db;
+{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+	return createDb(env);
+{{else}}
+	return createDb();
+{{/if}}
+}
+
+export async function createAbacatePayCheckout(input: {
+	localOrderId: string;
+	userId: string | null;
+	customerEmail: string | null;
+	abacatepayCheckoutId: string;
+	checkoutUrl: string;
+	amountInCents: number;
+	status: string;
+}) {
+	await getDb().insert(abacatePayCheckout).values(input);
+	return input;
+}
+
+export async function getAbacatePayCheckoutByCheckoutId(checkoutId: string) {
+	const [record] = await getDb()
+		.select()
+		.from(abacatePayCheckout)
+		.where(eq(abacatePayCheckout.abacatepayCheckoutId, checkoutId))
+		.limit(1);
+
+	return record ?? null;
+}
+
+export async function hasAbacatePayWebhookEvent(eventId: string) {
+	const [record] = await getDb()
+		.select({ eventId: abacatePayWebhookEvent.eventId })
+		.from(abacatePayWebhookEvent)
+		.where(eq(abacatePayWebhookEvent.eventId, eventId))
+		.limit(1);
+
+	return Boolean(record);
+}
+
+export async function recordAbacatePayWebhookEvent(input: {
+	eventId: string;
+	eventType: string;
+	payload: string;
+}) {
+	await getDb().insert(abacatePayWebhookEvent).values(input);
+}
+
+export async function markAbacatePayCheckoutCompleted(input: {
+	checkoutId: string;
+	eventId: string;
+	status: string;
+}) {
+	await getDb()
+		.update(abacatePayCheckout)
+		.set({
+			status: input.status,
+			eventId: input.eventId,
+			updatedAt: new Date(),
+		})
+		.where(eq(abacatePayCheckout.abacatepayCheckoutId, input.checkoutId));
+}
+`],
+  ["payments/abacatepay/db/drizzle/mysql/src/schema/abacatepay.ts.hbs", `import { mysqlTable, varchar, text, int, timestamp, index } from "drizzle-orm/mysql-core";
+
+export const abacatePayCheckout = mysqlTable(
+	"abacatepay_checkout",
+	{
+		localOrderId: varchar("local_order_id", { length: 191 }).primaryKey(),
+		userId: varchar("user_id", { length: 191 }),
+		customerEmail: varchar("customer_email", { length: 255 }),
+		abacatepayCheckoutId: varchar("abacatepay_checkout_id", { length: 191 }).notNull().unique(),
+		checkoutUrl: text("checkout_url").notNull(),
+		amountInCents: int("amount_in_cents").notNull(),
+		status: varchar("status", { length: 32 }).notNull(),
+		eventId: varchar("event_id", { length: 191 }).unique(),
+		createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+		updatedAt: timestamp("updated_at", { fsp: 3 }).defaultNow().$onUpdate(() => new Date()).notNull(),
+	},
+	(table) => [index("abacatepay_checkout_checkout_id_idx").on(table.abacatepayCheckoutId)],
+);
+
+export const abacatePayWebhookEvent = mysqlTable("abacatepay_webhook_event", {
+	eventId: varchar("event_id", { length: 191 }).primaryKey(),
+	eventType: varchar("event_type", { length: 64 }).notNull(),
+	payload: text("payload").notNull(),
+	createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+});
+`],
+  ["payments/abacatepay/db/drizzle/postgres/src/abacatepay.ts.hbs", `import { eq } from "drizzle-orm";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { env } from "@{{projectName}}/env/server";
+{{/if}}
+import { createDb{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}, db{{/if}} } from "./index";
+import { abacatePayCheckout, abacatePayWebhookEvent } from "./schema/abacatepay";
+
+function getDb() {
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+	return db;
+{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+	return createDb(env);
+{{else}}
+	return createDb();
+{{/if}}
+}
+
+export async function createAbacatePayCheckout(input: {
+	localOrderId: string;
+	userId: string | null;
+	customerEmail: string | null;
+	abacatepayCheckoutId: string;
+	checkoutUrl: string;
+	amountInCents: number;
+	status: string;
+}) {
+	await getDb().insert(abacatePayCheckout).values(input);
+	return input;
+}
+
+export async function getAbacatePayCheckoutByCheckoutId(checkoutId: string) {
+	const [record] = await getDb()
+		.select()
+		.from(abacatePayCheckout)
+		.where(eq(abacatePayCheckout.abacatepayCheckoutId, checkoutId))
+		.limit(1);
+
+	return record ?? null;
+}
+
+export async function hasAbacatePayWebhookEvent(eventId: string) {
+	const [record] = await getDb()
+		.select({ eventId: abacatePayWebhookEvent.eventId })
+		.from(abacatePayWebhookEvent)
+		.where(eq(abacatePayWebhookEvent.eventId, eventId))
+		.limit(1);
+
+	return Boolean(record);
+}
+
+export async function recordAbacatePayWebhookEvent(input: {
+	eventId: string;
+	eventType: string;
+	payload: string;
+}) {
+	await getDb().insert(abacatePayWebhookEvent).values(input);
+}
+
+export async function markAbacatePayCheckoutCompleted(input: {
+	checkoutId: string;
+	eventId: string;
+	status: string;
+}) {
+	await getDb()
+		.update(abacatePayCheckout)
+		.set({
+			status: input.status,
+			eventId: input.eventId,
+			updatedAt: new Date(),
+		})
+		.where(eq(abacatePayCheckout.abacatepayCheckoutId, input.checkoutId));
+}
+`],
+  ["payments/abacatepay/db/drizzle/postgres/src/schema/abacatepay.ts.hbs", `import { pgTable, text, integer, timestamp, index } from "drizzle-orm/pg-core";
+
+export const abacatePayCheckout = pgTable(
+	"abacatepay_checkout",
+	{
+		localOrderId: text("local_order_id").primaryKey(),
+		userId: text("user_id"),
+		customerEmail: text("customer_email"),
+		abacatepayCheckoutId: text("abacatepay_checkout_id").notNull().unique(),
+		checkoutUrl: text("checkout_url").notNull(),
+		amountInCents: integer("amount_in_cents").notNull(),
+		status: text("status").notNull(),
+		eventId: text("event_id").unique(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()).notNull(),
+	},
+	(table) => [index("abacatepay_checkout_checkout_id_idx").on(table.abacatepayCheckoutId)],
+);
+
+export const abacatePayWebhookEvent = pgTable("abacatepay_webhook_event", {
+	eventId: text("event_id").primaryKey(),
+	eventType: text("event_type").notNull(),
+	payload: text("payload").notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+`],
+  ["payments/abacatepay/db/drizzle/sqlite/src/abacatepay.ts.hbs", `import { eq } from "drizzle-orm";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { env } from "@{{projectName}}/env/server";
+{{/if}}
+import { createDb{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}, db{{/if}} } from "./index";
+import { abacatePayCheckout, abacatePayWebhookEvent } from "./schema/abacatepay";
+
+function getDb() {
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+	return db;
+{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+	return createDb(env);
+{{else}}
+	return createDb();
+{{/if}}
+}
+
+export async function createAbacatePayCheckout(input: {
+	localOrderId: string;
+	userId: string | null;
+	customerEmail: string | null;
+	abacatepayCheckoutId: string;
+	checkoutUrl: string;
+	amountInCents: number;
+	status: string;
+}) {
+	await getDb().insert(abacatePayCheckout).values(input);
+	return input;
+}
+
+export async function getAbacatePayCheckoutByCheckoutId(checkoutId: string) {
+	const [record] = await getDb()
+		.select()
+		.from(abacatePayCheckout)
+		.where(eq(abacatePayCheckout.abacatepayCheckoutId, checkoutId))
+		.limit(1);
+
+	return record ?? null;
+}
+
+export async function hasAbacatePayWebhookEvent(eventId: string) {
+	const [record] = await getDb()
+		.select({ eventId: abacatePayWebhookEvent.eventId })
+		.from(abacatePayWebhookEvent)
+		.where(eq(abacatePayWebhookEvent.eventId, eventId))
+		.limit(1);
+
+	return Boolean(record);
+}
+
+export async function recordAbacatePayWebhookEvent(input: {
+	eventId: string;
+	eventType: string;
+	payload: string;
+}) {
+	await getDb().insert(abacatePayWebhookEvent).values(input);
+}
+
+export async function markAbacatePayCheckoutCompleted(input: {
+	checkoutId: string;
+	eventId: string;
+	status: string;
+}) {
+	await getDb()
+		.update(abacatePayCheckout)
+		.set({
+			status: input.status,
+			eventId: input.eventId,
+			updatedAt: new Date(),
+		})
+		.where(eq(abacatePayCheckout.abacatepayCheckoutId, input.checkoutId));
+}
+`],
+  ["payments/abacatepay/db/drizzle/sqlite/src/schema/abacatepay.ts.hbs", `import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
+
+export const abacatePayCheckout = sqliteTable(
+	"abacatepay_checkout",
+	{
+		localOrderId: text("local_order_id").primaryKey(),
+		userId: text("user_id"),
+		customerEmail: text("customer_email"),
+		abacatepayCheckoutId: text("abacatepay_checkout_id").notNull().unique(),
+		checkoutUrl: text("checkout_url").notNull(),
+		amountInCents: integer("amount_in_cents").notNull(),
+		status: text("status").notNull(),
+		eventId: text("event_id").unique(),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.default(sql\`(cast(unixepoch('subsecond') * 1000 as integer))\`)
+			.notNull(),
+		updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+			.default(sql\`(cast(unixepoch('subsecond') * 1000 as integer))\`)
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [index("abacatepay_checkout_checkout_id_idx").on(table.abacatepayCheckoutId)],
+);
+
+export const abacatePayWebhookEvent = sqliteTable("abacatepay_webhook_event", {
+	eventId: text("event_id").primaryKey(),
+	eventType: text("event_type").notNull(),
+	payload: text("payload").notNull(),
+	createdAt: integer("created_at", { mode: "timestamp_ms" })
+		.default(sql\`(cast(unixepoch('subsecond') * 1000 as integer))\`)
+		.notNull(),
+});
+`],
+  ["payments/abacatepay/db/prisma/mysql/prisma/schema/abacatepay.prisma.hbs", `model AbacatePayCheckout {
+  localOrderId         String   @id
+  userId               String?
+  customerEmail        String?
+  abacatepayCheckoutId String   @unique
+  checkoutUrl          String
+  amountInCents        Int
+  status               String
+  eventId              String?  @unique
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([abacatepayCheckoutId])
+  @@map("abacatepay_checkout")
+}
+
+model AbacatePayWebhookEvent {
+  eventId   String   @id
+  eventType String
+  payload   String
+  createdAt DateTime @default(now())
+
+  @@map("abacatepay_webhook_event")
+}
+`],
+  ["payments/abacatepay/db/prisma/mysql/src/abacatepay.ts.hbs", `{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { env } from "@{{projectName}}/env/server";
+{{/if}}
+import { createPrismaClient{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}, default as prisma{{/if}} } from "./index";
+
+function getPrisma() {
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+	return prisma;
+{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+	return createPrismaClient(env);
+{{else}}
+	return createPrismaClient();
+{{/if}}
+}
+
+export async function createAbacatePayCheckout(input: {
+	localOrderId: string;
+	userId: string | null;
+	customerEmail: string | null;
+	abacatepayCheckoutId: string;
+	checkoutUrl: string;
+	amountInCents: number;
+	status: string;
+}) {
+	await getPrisma().abacatePayCheckout.create({ data: input });
+	return input;
+}
+
+export async function getAbacatePayCheckoutByCheckoutId(checkoutId: string) {
+	return (
+		(await getPrisma().abacatePayCheckout.findUnique({
+			where: { abacatepayCheckoutId: checkoutId },
+		})) ?? null
+	);
+}
+
+export async function hasAbacatePayWebhookEvent(eventId: string) {
+	const record = await getPrisma().abacatePayWebhookEvent.findUnique({
+		where: { eventId },
+		select: { eventId: true },
+	});
+
+	return Boolean(record);
+}
+
+export async function recordAbacatePayWebhookEvent(input: {
+	eventId: string;
+	eventType: string;
+	payload: string;
+}) {
+	await getPrisma().abacatePayWebhookEvent.create({ data: input });
+}
+
+export async function markAbacatePayCheckoutCompleted(input: {
+	checkoutId: string;
+	eventId: string;
+	status: string;
+}) {
+	await getPrisma().abacatePayCheckout.update({
+		where: { abacatepayCheckoutId: input.checkoutId },
+		data: {
+			status: input.status,
+			eventId: input.eventId,
+		},
+	});
+}
+`],
+  ["payments/abacatepay/db/prisma/postgres/prisma/schema/abacatepay.prisma.hbs", `model AbacatePayCheckout {
+  localOrderId         String   @id
+  userId               String?
+  customerEmail        String?
+  abacatepayCheckoutId String   @unique
+  checkoutUrl          String
+  amountInCents        Int
+  status               String
+  eventId              String?  @unique
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([abacatepayCheckoutId])
+  @@map("abacatepay_checkout")
+}
+
+model AbacatePayWebhookEvent {
+  eventId   String   @id
+  eventType String
+  payload   String
+  createdAt DateTime @default(now())
+
+  @@map("abacatepay_webhook_event")
+}
+`],
+  ["payments/abacatepay/db/prisma/postgres/src/abacatepay.ts.hbs", `{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { env } from "@{{projectName}}/env/server";
+{{/if}}
+import { createPrismaClient{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}, default as prisma{{/if}} } from "./index";
+
+function getPrisma() {
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+	return prisma;
+{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+	return createPrismaClient(env);
+{{else}}
+	return createPrismaClient();
+{{/if}}
+}
+
+export async function createAbacatePayCheckout(input: {
+	localOrderId: string;
+	userId: string | null;
+	customerEmail: string | null;
+	abacatepayCheckoutId: string;
+	checkoutUrl: string;
+	amountInCents: number;
+	status: string;
+}) {
+	await getPrisma().abacatePayCheckout.create({ data: input });
+	return input;
+}
+
+export async function getAbacatePayCheckoutByCheckoutId(checkoutId: string) {
+	return (
+		(await getPrisma().abacatePayCheckout.findUnique({
+			where: { abacatepayCheckoutId: checkoutId },
+		})) ?? null
+	);
+}
+
+export async function hasAbacatePayWebhookEvent(eventId: string) {
+	const record = await getPrisma().abacatePayWebhookEvent.findUnique({
+		where: { eventId },
+		select: { eventId: true },
+	});
+
+	return Boolean(record);
+}
+
+export async function recordAbacatePayWebhookEvent(input: {
+	eventId: string;
+	eventType: string;
+	payload: string;
+}) {
+	await getPrisma().abacatePayWebhookEvent.create({ data: input });
+}
+
+export async function markAbacatePayCheckoutCompleted(input: {
+	checkoutId: string;
+	eventId: string;
+	status: string;
+}) {
+	await getPrisma().abacatePayCheckout.update({
+		where: { abacatepayCheckoutId: input.checkoutId },
+		data: {
+			status: input.status,
+			eventId: input.eventId,
+		},
+	});
+}
+`],
+  ["payments/abacatepay/db/prisma/sqlite/prisma/schema/abacatepay.prisma.hbs", `model AbacatePayCheckout {
+  localOrderId         String   @id
+  userId               String?
+  customerEmail        String?
+  abacatepayCheckoutId String   @unique
+  checkoutUrl          String
+  amountInCents        Int
+  status               String
+  eventId              String?  @unique
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([abacatepayCheckoutId])
+  @@map("abacatepay_checkout")
+}
+
+model AbacatePayWebhookEvent {
+  eventId   String   @id
+  eventType String
+  payload   String
+  createdAt DateTime @default(now())
+
+  @@map("abacatepay_webhook_event")
+}
+`],
+  ["payments/abacatepay/db/prisma/sqlite/src/abacatepay.ts.hbs", `{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { env } from "@{{projectName}}/env/server";
+{{/if}}
+import { createPrismaClient{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}, default as prisma{{/if}} } from "./index";
+
+function getPrisma() {
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+	return prisma;
+{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+	return createPrismaClient(env);
+{{else}}
+	return createPrismaClient();
+{{/if}}
+}
+
+export async function createAbacatePayCheckout(input: {
+	localOrderId: string;
+	userId: string | null;
+	customerEmail: string | null;
+	abacatepayCheckoutId: string;
+	checkoutUrl: string;
+	amountInCents: number;
+	status: string;
+}) {
+	await getPrisma().abacatePayCheckout.create({ data: input });
+	return input;
+}
+
+export async function getAbacatePayCheckoutByCheckoutId(checkoutId: string) {
+	return (
+		(await getPrisma().abacatePayCheckout.findUnique({
+			where: { abacatepayCheckoutId: checkoutId },
+		})) ?? null
+	);
+}
+
+export async function hasAbacatePayWebhookEvent(eventId: string) {
+	const record = await getPrisma().abacatePayWebhookEvent.findUnique({
+		where: { eventId },
+		select: { eventId: true },
+	});
+
+	return Boolean(record);
+}
+
+export async function recordAbacatePayWebhookEvent(input: {
+	eventId: string;
+	eventType: string;
+	payload: string;
+}) {
+	await getPrisma().abacatePayWebhookEvent.create({ data: input });
+}
+
+export async function markAbacatePayCheckoutCompleted(input: {
+	checkoutId: string;
+	eventId: string;
+	status: string;
+}) {
+	await getPrisma().abacatePayCheckout.update({
+		where: { abacatepayCheckoutId: input.checkoutId },
+		data: {
+			status: input.status,
+			eventId: input.eventId,
+		},
+	});
+}
+`],
+  ["payments/abacatepay/fullstack/astro/src/pages/api/payments/abacatepay/checkout/[checkoutId].ts.hbs", `import { getStoredAbacatePayCheckout } from "@{{projectName}}/payments/lib/abacatepay";
+import type { APIRoute } from "astro";
+
+export const prerender = false;
+
+export const GET: APIRoute = async ({ params }) => {
+  const checkout = await getStoredAbacatePayCheckout(params.checkoutId ?? "");
+  if (!checkout) {
+    return Response.json({ error: "Checkout not found" }, { status: 404 });
+  }
+
+  return Response.json({ data: checkout, success: true, error: null });
+};
+`],
+  ["payments/abacatepay/fullstack/astro/src/pages/api/payments/abacatepay/checkout/index.ts.hbs", `{{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{/if}}
+import { createAbacatePayHostedCheckout } from "@{{projectName}}/payments/lib/abacatepay";
+import type { APIRoute } from "astro";
+
+export const prerender = false;
+
+export const POST: APIRoute = async ({ request }) => {
+{{#if (and (eq auth "better-auth") (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare"))))}}
+  const auth = createAuth();
+{{/if}}
+{{#if (eq auth "better-auth")}}
+  const session = await auth.api.getSession({
+    headers: request.headers,
+  });
+  const checkout = await createAbacatePayHostedCheckout({
+    userId: session?.user?.id ?? null,
+    customerEmail: session?.user?.email ?? null,
+  });
+{{else}}
+  const checkout = await createAbacatePayHostedCheckout();
+{{/if}}
+  return Response.json({ data: checkout, success: true, error: null });
+};
+`],
+  ["payments/abacatepay/fullstack/astro/src/pages/api/payments/abacatepay/webhook.ts.hbs", `import { env } from "@{{projectName}}/env/server";
+import { processAbacatePayWebhook } from "@{{projectName}}/payments/lib/abacatepay";
+import type { APIRoute } from "astro";
+
+export const prerender = false;
+
+export const POST: APIRoute = async ({ request }) => {
+  const requestUrl = new URL(request.url);
+  if (requestUrl.searchParams.get("webhookSecret") !== env.ABACATEPAY_WEBHOOK_SECRET) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const signature = request.headers.get("X-Webhook-Signature");
+  if (!signature) {
+    return Response.json({ error: "Missing X-Webhook-Signature" }, { status: 400 });
+  }
+
+  const rawBody = await request.text();
+  const result = await processAbacatePayWebhook(rawBody, signature);
+  return Response.json(result.body, { status: result.status });
+};
+`],
+  ["payments/abacatepay/fullstack/next/src/app/api/payments/abacatepay/checkout/[checkoutId]/route.ts.hbs", `import { getStoredAbacatePayCheckout } from "@{{projectName}}/payments/lib/abacatepay";
+
+export async function GET(
+	_request: Request,
+	{ params }: { params: Promise<{ checkoutId: string }> },
+) {
+	const { checkoutId } = await params;
+	const checkout = await getStoredAbacatePayCheckout(checkoutId);
+
+	if (!checkout) {
+		return Response.json({ error: "Checkout not found" }, { status: 404 });
+	}
+
+	return Response.json({ data: checkout, success: true, error: null });
+}
+`],
+  ["payments/abacatepay/fullstack/next/src/app/api/payments/abacatepay/checkout/route.ts.hbs", `{{#if (eq auth "better-auth")}}
+import { headers } from "next/headers";
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{/if}}
+import { createAbacatePayHostedCheckout } from "@{{projectName}}/payments/lib/abacatepay";
+
+export async function POST() {
+	{{#if (eq auth "better-auth")}}
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+		headers: await headers(),
+	});
+	const checkout = await createAbacatePayHostedCheckout({
+		userId: session?.user?.id ?? null,
+		customerEmail: session?.user?.email ?? null,
+	});
+	{{else}}
+	const checkout = await createAbacatePayHostedCheckout();
+	{{/if}}
+	return Response.json({ data: checkout, success: true, error: null });
+}
+`],
+  ["payments/abacatepay/fullstack/next/src/app/api/payments/abacatepay/webhook/route.ts.hbs", `import { env } from "@{{projectName}}/env/server";
+import { processAbacatePayWebhook } from "@{{projectName}}/payments/lib/abacatepay";
+
+export async function POST(request: Request) {
+	const requestUrl = new URL(request.url);
+	if (requestUrl.searchParams.get("webhookSecret") !== env.ABACATEPAY_WEBHOOK_SECRET) {
+		return Response.json({ error: "Unauthorized" }, { status: 401 });
+	}
+
+	const signature = request.headers.get("X-Webhook-Signature");
+	if (!signature) {
+		return Response.json({ error: "Missing X-Webhook-Signature" }, { status: 400 });
+	}
+
+	const rawBody = await request.text();
+	const result = await processAbacatePayWebhook(rawBody, signature);
+	return Response.json(result.body, { status: result.status });
+}
+`],
+  ["payments/abacatepay/fullstack/nuxt/server/api/payments/abacatepay/checkout.post.ts.hbs", `{{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{/if}}
+import { createAbacatePayHostedCheckout } from "@{{projectName}}/payments/lib/abacatepay";
+
+export default defineEventHandler(async (event) => {
+{{#if (and (eq auth "better-auth") (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare"))))}}
+  const auth = createAuth();
+{{/if}}
+{{#if (eq auth "better-auth")}}
+  const session = await auth.api.getSession({
+    headers: event.headers,
+  });
+  const checkout = await createAbacatePayHostedCheckout({
+    userId: session?.user?.id ?? null,
+    customerEmail: session?.user?.email ?? null,
+  });
+{{else}}
+  const checkout = await createAbacatePayHostedCheckout();
+{{/if}}
+  return { data: checkout, success: true, error: null };
+});
+`],
+  ["payments/abacatepay/fullstack/nuxt/server/api/payments/abacatepay/checkout/[checkoutId].get.ts.hbs", `import { getStoredAbacatePayCheckout } from "@{{projectName}}/payments/lib/abacatepay";
+
+export default defineEventHandler(async (event) => {
+  const checkoutId = getRouterParam(event, "checkoutId");
+  if (!checkoutId) {
+    throw createError({ statusCode: 400, statusMessage: "Missing checkoutId" });
+  }
+
+  const checkout = await getStoredAbacatePayCheckout(checkoutId);
+  if (!checkout) {
+    throw createError({ statusCode: 404, statusMessage: "Checkout not found" });
+  }
+
+  return { data: checkout, success: true, error: null };
+});
+`],
+  ["payments/abacatepay/fullstack/nuxt/server/api/payments/abacatepay/webhook.post.ts.hbs", `import { env } from "@{{projectName}}/env/server";
+import { processAbacatePayWebhook } from "@{{projectName}}/payments/lib/abacatepay";
+
+export default defineEventHandler(async (event) => {
+  const requestUrl = getRequestURL(event);
+  if (requestUrl.searchParams.get("webhookSecret") !== env.ABACATEPAY_WEBHOOK_SECRET) {
+    throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
+  }
+
+  const signature = getHeader(event, "X-Webhook-Signature");
+  if (!signature) {
+    throw createError({ statusCode: 400, statusMessage: "Missing X-Webhook-Signature" });
+  }
+
+  const rawBody = await readRawBody(event, "utf8");
+  const result = await processAbacatePayWebhook(rawBody ?? "", signature);
+  setResponseStatus(event, result.status);
+  return result.body;
+});
+`],
+  ["payments/abacatepay/fullstack/svelte/src/routes/api/payments/abacatepay/checkout/[checkoutId]/+server.ts.hbs", `import { getStoredAbacatePayCheckout } from "@{{projectName}}/payments/lib/abacatepay";
+import type { RequestHandler } from "@sveltejs/kit";
+
+export const GET: RequestHandler = async ({ params }) => {
+	const checkout = await getStoredAbacatePayCheckout(params.checkoutId);
+	if (!checkout) {
+		return Response.json({ error: "Checkout not found" }, { status: 404 });
+	}
+
+	return Response.json({ data: checkout, success: true, error: null });
+};
+`],
+  ["payments/abacatepay/fullstack/svelte/src/routes/api/payments/abacatepay/checkout/+server.ts.hbs", `{{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{/if}}
+import { createAbacatePayHostedCheckout } from "@{{projectName}}/payments/lib/abacatepay";
+import type { RequestHandler } from "@sveltejs/kit";
+
+export const POST: RequestHandler = async ({ request }) => {
+	{{#if (and (eq auth "better-auth") (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare"))))}}
+	const auth = createAuth();
+	{{/if}}
+	{{#if (eq auth "better-auth")}}
+	const session = await auth.api.getSession({
+		headers: request.headers,
+	});
+	const checkout = await createAbacatePayHostedCheckout({
+		userId: session?.user?.id ?? null,
+		customerEmail: session?.user?.email ?? null,
+	});
+	{{else}}
+	const checkout = await createAbacatePayHostedCheckout();
+	{{/if}}
+	return Response.json({ data: checkout, success: true, error: null });
+};
+`],
+  ["payments/abacatepay/fullstack/svelte/src/routes/api/payments/abacatepay/webhook/+server.ts.hbs", `import { env } from "@{{projectName}}/env/server";
+import { processAbacatePayWebhook } from "@{{projectName}}/payments/lib/abacatepay";
+import type { RequestHandler } from "@sveltejs/kit";
+
+export const POST: RequestHandler = async ({ request }) => {
+	const requestUrl = new URL(request.url);
+	if (requestUrl.searchParams.get("webhookSecret") !== env.ABACATEPAY_WEBHOOK_SECRET) {
+		return Response.json({ error: "Unauthorized" }, { status: 401 });
+	}
+
+	const signature = request.headers.get("X-Webhook-Signature");
+	if (!signature) {
+		return Response.json({ error: "Missing X-Webhook-Signature" }, { status: 400 });
+	}
+
+	const rawBody = await request.text();
+	const result = await processAbacatePayWebhook(rawBody, signature);
+	return Response.json(result.body, { status: result.status });
+};
+`],
+  ["payments/abacatepay/fullstack/tanstack-start/src/routes/api/payments/abacatepay/checkout.ts.hbs", `{{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{/if}}
+import { createAbacatePayHostedCheckout } from "@{{projectName}}/payments/lib/abacatepay";
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/api/payments/abacatepay/checkout")({
+	server: {
+		handlers: {
+			POST: async ({ request }) => {
+				{{#if (eq auth "better-auth")}}
+				const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+					headers: request.headers,
+				});
+				const checkout = await createAbacatePayHostedCheckout({
+					userId: session?.user?.id ?? null,
+					customerEmail: session?.user?.email ?? null,
+				});
+				{{else}}
+				const checkout = await createAbacatePayHostedCheckout();
+				{{/if}}
+				return Response.json({ data: checkout, success: true, error: null });
+			},
+		},
+	},
+});
+`],
+  ["payments/abacatepay/fullstack/tanstack-start/src/routes/api/payments/abacatepay/checkout/$checkoutId.ts.hbs", `import { getStoredAbacatePayCheckout } from "@{{projectName}}/payments/lib/abacatepay";
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/api/payments/abacatepay/checkout/$checkoutId")({
+	server: {
+		handlers: {
+			GET: async ({ params }) => {
+				const checkout = await getStoredAbacatePayCheckout(params.checkoutId);
+				if (!checkout) {
+					return Response.json({ error: "Checkout not found" }, { status: 404 });
+				}
+
+				return Response.json({ data: checkout, success: true, error: null });
+			},
+		},
+	},
+});
+`],
+  ["payments/abacatepay/fullstack/tanstack-start/src/routes/api/payments/abacatepay/webhook.ts.hbs", `import { env } from "@{{projectName}}/env/server";
+import { processAbacatePayWebhook } from "@{{projectName}}/payments/lib/abacatepay";
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/api/payments/abacatepay/webhook")({
+	server: {
+		handlers: {
+			POST: async ({ request }) => {
+				const requestUrl = new URL(request.url);
+				if (requestUrl.searchParams.get("webhookSecret") !== env.ABACATEPAY_WEBHOOK_SECRET) {
+					return Response.json({ error: "Unauthorized" }, { status: 401 });
+				}
+
+				const signature = request.headers.get("X-Webhook-Signature");
+				if (!signature) {
+					return Response.json({ error: "Missing X-Webhook-Signature" }, { status: 400 });
+				}
+
+				const rawBody = await request.text();
+				const result = await processAbacatePayWebhook(rawBody, signature);
+				return Response.json(result.body, { status: result.status });
+			},
+		},
+	},
+});
+`],
+  ["payments/abacatepay/server/base/src/lib/abacatepay.ts.hbs", `import crypto from "node:crypto";
+import { env } from "@{{projectName}}/env/server";
+import {
+	createAbacatePayCheckout,
+	getAbacatePayCheckoutByCheckoutId,
+	hasAbacatePayWebhookEvent,
+	markAbacatePayCheckoutCompleted,
+	recordAbacatePayWebhookEvent,
+} from "@{{projectName}}/db/abacatepay";
+
+const ABACATEPAY_API_BASE_URL = "https://api.abacatepay.com/v2";
+const ABACATEPAY_PRODUCT_ID = "prod_your_product_id";
+
+type AbacatePayEnvelope<T> = {
+	data: T;
+	success: boolean;
+	error: string | null;
+};
+
+type AbacatePayCheckoutResponse = {
+	id: string;
+	url: string;
+	amount: number;
+	status: string;
+};
+
+type AbacatePayWebhookPayload = {
+	id?: string;
+	event?: string;
+	data?: {
+		id?: string;
+		checkout?: {
+			id?: string;
+			status?: string;
+		};
+		billing?: {
+			id?: string;
+			status?: string;
+		};
+		status?: string;
+	};
+};
+
+type AbacatePayCheckoutIdentity = {
+	userId?: string | null;
+	customerEmail?: string | null;
+};
+
+async function abacatePayFetch<T>(path: string, init: RequestInit): Promise<T> {
+	const response = await fetch(\`\${ABACATEPAY_API_BASE_URL}\${path}\`, {
+		...init,
+		headers: {
+			Authorization: \`Bearer \${env.ABACATEPAY_API_KEY}\`,
+			"Content-Type": "application/json",
+			...(init.headers ?? {}),
+		},
+	});
+
+	if (!response.ok) {
+		throw new Error(\`AbacatePay request failed with status \${response.status}\`);
+	}
+
+	const payload = (await response.json()) as AbacatePayEnvelope<T> | { error?: string };
+	if (!("success" in payload) || !payload.success || !payload.data) {
+		throw new Error(payload.error ?? "AbacatePay request failed");
+	}
+
+	return payload.data;
+}
+
+function getCheckoutIdFromWebhook(payload: AbacatePayWebhookPayload) {
+	return payload.data?.id ?? payload.data?.checkout?.id ?? payload.data?.billing?.id;
+}
+
+function getCheckoutStatusFromWebhook(payload: AbacatePayWebhookPayload) {
+	return payload.data?.status ?? payload.data?.checkout?.status ?? payload.data?.billing?.status;
+}
+
+export async function createAbacatePayHostedCheckout(identity: AbacatePayCheckoutIdentity = {}) {
+	const localOrderId = crypto.randomUUID();
+	const userId = identity.userId ?? null;
+	const customerEmail = identity.customerEmail ?? null;
+	const checkout = await abacatePayFetch<AbacatePayCheckoutResponse>("/checkouts/create", {
+		method: "POST",
+		body: JSON.stringify({
+			items: [{ id: ABACATEPAY_PRODUCT_ID, quantity: 1 }],
+			externalId: localOrderId,
+			returnUrl: env.ABACATEPAY_RETURN_URL,
+			completionUrl: env.ABACATEPAY_COMPLETION_URL,
+			metadata: {
+				localOrderId,
+				...(userId ? { userId } : {}),
+				...(customerEmail ? { customerEmail } : {}),
+			},
+		}),
+	});
+
+	await createAbacatePayCheckout({
+		localOrderId,
+		userId,
+		customerEmail,
+		abacatepayCheckoutId: checkout.id,
+		checkoutUrl: checkout.url,
+		amountInCents: checkout.amount,
+		status: checkout.status,
+	});
+
+	return {
+		localOrderId,
+		checkoutId: checkout.id,
+		url: checkout.url,
+		status: checkout.status,
+		amountInCents: checkout.amount,
+	};
+}
+
+export async function getStoredAbacatePayCheckout(checkoutId: string) {
+	return getAbacatePayCheckoutByCheckoutId(checkoutId);
+}
+
+export function verifyAbacatePayWebhookSignature(rawBody: string, signatureFromHeader: string) {
+	const expectedSig = crypto
+		.createHmac("sha256", env.ABACATEPAY_PUBLIC_KEY)
+		.update(Buffer.from(rawBody, "utf8"))
+		.digest("base64");
+
+	const expected = Buffer.from(expectedSig);
+	const received = Buffer.from(signatureFromHeader);
+
+	return (
+		expected.length === received.length && crypto.timingSafeEqual(expected, received)
+	);
+}
+
+export async function processAbacatePayWebhook(rawBody: string, signatureFromHeader: string) {
+	if (!verifyAbacatePayWebhookSignature(rawBody, signatureFromHeader)) {
+		return { ok: false as const, status: 401, body: { error: "Invalid signature" } };
+	}
+
+	const payload = JSON.parse(rawBody) as AbacatePayWebhookPayload;
+	if (!payload.id) {
+		return { ok: false as const, status: 400, body: { error: "Missing event id" } };
+	}
+
+	const alreadyProcessed = await hasAbacatePayWebhookEvent(payload.id);
+	if (alreadyProcessed) {
+		return { ok: true as const, status: 200, body: { ok: true, duplicate: true } };
+	}
+
+	await recordAbacatePayWebhookEvent({
+		eventId: payload.id,
+		eventType: payload.event ?? "unknown",
+		payload: rawBody,
+	});
+
+	if (payload.event !== "checkout.completed") {
+		return { ok: true as const, status: 200, body: { ok: true, ignored: true } };
+	}
+
+	const checkoutId = getCheckoutIdFromWebhook(payload);
+	if (!checkoutId) {
+		return { ok: true as const, status: 200, body: { ok: true, ignored: true } };
+	}
+
+	await markAbacatePayCheckoutCompleted({
+		checkoutId,
+		eventId: payload.id,
+		status: getCheckoutStatusFromWebhook(payload) ?? "PAID",
+	});
+
+	return { ok: true as const, status: 200, body: { ok: true } };
+}
+`],
+  ["payments/abacatepay/web/astro/src/pages/success.astro.hbs", `---
+const checkoutId = Astro.url.searchParams.get("checkout_id");
+const baseUrl = {{#if (eq backend "self")}}""{{else}}"\${import.meta.env.PUBLIC_SERVER_URL}"{{/if}};
+
+let status: string | null = null;
+
+if (checkoutId) {
+  const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout/\${checkoutId}\`).catch(
+    () => null,
+  );
+  if (response?.ok) {
+    const payload = (await response.json()) as { data?: { status?: string } };
+    status = payload.data?.status ?? null;
+  }
+}
+---
+
+<div class="container mx-auto px-4 py-8">
+  <h1>Checkout Status</h1>
+  {checkoutId ? <p>Checkout ID: {checkoutId}</p> : <p>Missing checkout_id.</p>}
+  {status ? <p>Status: {status}</p> : <p>Waiting for local confirmation.</p>}
+</div>
+`],
+  ["payments/abacatepay/web/nuxt/app/pages/success.vue.hbs", `<script setup lang="ts">
+const route = useRoute()
+const checkoutId = computed(() => route.query.checkout_id as string | undefined)
+const checkout = ref<{ status?: string } | null>(null)
+
+onMounted(async () => {
+  if (!checkoutId.value) return
+
+  const baseUrl = {{#if (eq backend "self")}}""{{else}}useRuntimeConfig().public.serverUrl{{/if}}
+  const payload = await $fetch<{ data?: { status?: string } }>(
+    \`\${baseUrl}/api/payments/abacatepay/checkout/\${checkoutId.value}\`,
+  ).catch(() => null)
+
+  checkout.value = payload?.data ?? null
+})
+</script>
+
+<template>
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Checkout Status</h1>
+    <p v-if="checkoutId">Checkout ID: \\{{ checkoutId }}</p>
+    <p v-else>Missing checkout_id.</p>
+    <p v-if="checkout">Status: \\{{ checkout.status }}</p>
+    <p v-else>Waiting for local confirmation.</p>
+  </div>
+</template>
+`],
+  ["payments/abacatepay/web/react/next/src/app/success/page.tsx.hbs", `import { env } from "@{{projectName}}/env/web";
+
+async function getCheckoutStatus(checkoutId: string) {
+	const baseUrl = {{#if (eq backend "self")}}""{{else}}env.NEXT_PUBLIC_SERVER_URL{{/if}};
+	const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout/\${checkoutId}\`, {
+		cache: "no-store",
+	});
+
+	if (!response.ok) {
+		return null;
+	}
+
+	const payload = (await response.json()) as {
+		data?: {
+			status?: string;
+			localOrderId?: string;
+		};
+	};
+
+	return payload.data ?? null;
+}
+
+export default async function SuccessPage({
+	searchParams,
+}: {
+	searchParams: Promise<{ checkout_id?: string }>;
+}) {
+	const params = await searchParams;
+	const checkoutId = params.checkout_id ?? "";
+	const checkout = checkoutId ? await getCheckoutStatus(checkoutId) : null;
+
+	return (
+		<div className="px-4 py-8">
+			<h1>Checkout Status</h1>
+			{checkoutId ? <p>Checkout ID: {checkoutId}</p> : <p>Missing checkout_id.</p>}
+			{checkout ? <p>Status: {checkout.status}</p> : <p>Waiting for local confirmation.</p>}
+		</div>
+	);
+}
+`],
+  ["payments/abacatepay/web/react/react-router/src/routes/success.tsx.hbs", `import { env } from "@{{projectName}}/env/web";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
+
+type CheckoutStatus = {
+	status?: string;
+	localOrderId?: string;
+};
+
+export default function SuccessPage() {
+	const [searchParams] = useSearchParams();
+	const checkoutId = searchParams.get("checkout_id") ?? "";
+	const [checkout, setCheckout] = useState<CheckoutStatus | null>(null);
+
+	useEffect(() => {
+		if (!checkoutId) return;
+
+		const controller = new AbortController();
+		const baseUrl = {{#if (eq backend "self")}}""{{else}}env.VITE_SERVER_URL{{/if}};
+		void fetch(\`\${baseUrl}/api/payments/abacatepay/checkout/\${checkoutId}\`, {
+			signal: controller.signal,
+		})
+			.then(async (response) => {
+				if (!response.ok) return null;
+				const payload = (await response.json()) as { data?: CheckoutStatus };
+				return payload.data ?? null;
+			})
+			.then((data) => {
+				if (data) setCheckout(data);
+			});
+
+		return () => controller.abort();
+	}, [checkoutId]);
+
+	return (
+		<div className="container mx-auto px-4 py-8">
+			<h1>Checkout Status</h1>
+			{checkoutId ? <p>Checkout ID: {checkoutId}</p> : <p>Missing checkout_id.</p>}
+			{checkout ? <p>Status: {checkout.status}</p> : <p>Waiting for local confirmation.</p>}
+		</div>
+	);
+}
+`],
+  ["payments/abacatepay/web/react/tanstack-router/src/routes/success.tsx.hbs", `import { env } from "@{{projectName}}/env/web";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+
+type CheckoutStatus = {
+	status?: string;
+	localOrderId?: string;
+};
+
+export const Route = createFileRoute("/success")({
+	component: SuccessPage,
+	validateSearch: (search) => ({
+		checkout_id: search.checkout_id as string,
+	}),
+});
+
+function SuccessPage() {
+	const { checkout_id } = useSearch({ from: "/success" });
+	const [checkout, setCheckout] = useState<CheckoutStatus | null>(null);
+
+	useEffect(() => {
+		if (!checkout_id) return;
+
+		const controller = new AbortController();
+		const baseUrl = {{#if (eq backend "self")}}""{{else}}env.VITE_SERVER_URL{{/if}};
+		void fetch(\`\${baseUrl}/api/payments/abacatepay/checkout/\${checkout_id}\`, {
+			signal: controller.signal,
+		})
+			.then(async (response) => {
+				if (!response.ok) return null;
+				const payload = (await response.json()) as { data?: CheckoutStatus };
+				return payload.data ?? null;
+			})
+			.then((data) => {
+				if (data) setCheckout(data);
+			});
+
+		return () => controller.abort();
+	}, [checkout_id]);
+
+	return (
+		<div className="container mx-auto px-4 py-8">
+			<h1>Checkout Status</h1>
+			{checkout_id ? <p>Checkout ID: {checkout_id}</p> : <p>Missing checkout_id.</p>}
+			{checkout ? <p>Status: {checkout.status}</p> : <p>Waiting for local confirmation.</p>}
+		</div>
+	);
+}
+`],
+  ["payments/abacatepay/web/react/tanstack-start/src/routes/success.tsx.hbs", `import { env } from "@{{projectName}}/env/web";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+
+type CheckoutStatus = {
+	status?: string;
+	localOrderId?: string;
+};
+
+export const Route = createFileRoute("/success")({
+	component: SuccessPage,
+	validateSearch: (search) => ({
+		checkout_id: search.checkout_id as string,
+	}),
+});
+
+function SuccessPage() {
+	const { checkout_id } = useSearch({ from: "/success" });
+	const [checkout, setCheckout] = useState<CheckoutStatus | null>(null);
+
+	useEffect(() => {
+		if (!checkout_id) return;
+
+		const controller = new AbortController();
+		const baseUrl = {{#if (eq backend "self")}}""{{else}}env.VITE_SERVER_URL{{/if}};
+		void fetch(\`\${baseUrl}/api/payments/abacatepay/checkout/\${checkout_id}\`, {
+			signal: controller.signal,
+		})
+			.then(async (response) => {
+				if (!response.ok) return null;
+				const payload = (await response.json()) as { data?: CheckoutStatus };
+				return payload.data ?? null;
+			})
+			.then((data) => {
+				if (data) setCheckout(data);
+			});
+
+		return () => controller.abort();
+	}, [checkout_id]);
+
+	return (
+		<div className="container mx-auto px-4 py-8">
+			<h1>Checkout Status</h1>
+			{checkout_id ? <p>Checkout ID: {checkout_id}</p> : <p>Missing checkout_id.</p>}
+			{checkout ? <p>Status: {checkout.status}</p> : <p>Waiting for local confirmation.</p>}
+		</div>
+	);
+}
+`],
+  ["payments/abacatepay/web/solid/src/routes/success.tsx.hbs", `import { env } from "@{{projectName}}/env/web";
+import { createFileRoute } from "@tanstack/solid-router";
+import { Show, createResource } from "solid-js";
+
+export const Route = createFileRoute("/success")({
+	component: SuccessPage,
+	validateSearch: (search) => ({
+		checkout_id: search.checkout_id as string,
+	}),
+});
+
+function SuccessPage() {
+	const searchParams = Route.useSearch();
+	const checkoutId = () => searchParams().checkout_id;
+	const [status] = createResource(checkoutId, async (value) => {
+		if (!value) return null;
+		const baseUrl = {{#if (eq backend "self")}}""{{else}}env.PUBLIC_SERVER_URL{{/if}};
+		const response = await fetch(\`\${baseUrl}/api/payments/abacatepay/checkout/\${value}\`);
+		if (!response.ok) return null;
+		const payload = (await response.json()) as { data?: { status?: string } };
+		return payload.data?.status ?? null;
+	});
+
+	return (
+		<div class="container mx-auto px-4 py-8">
+			<h1>Checkout Status</h1>
+			<Show when={checkoutId()} fallback={<p>Missing checkout_id.</p>}>
+				<p>Checkout ID: {checkoutId()}</p>
+			</Show>
+			<Show when={status()} fallback={<p>Waiting for local confirmation.</p>}>
+				<p>Status: {status()}</p>
+			</Show>
+		</div>
+	);
+}
+`],
+  ["payments/abacatepay/web/svelte/src/routes/success/+page.svelte.hbs", `<script lang="ts">
+	import { env } from '@{{projectName}}/env/web';
+	import { page } from '$app/state';
+
+	const checkoutId = $derived(page.url.searchParams.get('checkout_id'));
+	let status = $state<string | null>(null);
+
+	$effect(() => {
+		if (!checkoutId) return;
+		const baseUrl = {{#if (eq backend "self")}}''{{else}}env.PUBLIC_SERVER_URL{{/if}};
+
+		void fetch(\`\${baseUrl}/api/payments/abacatepay/checkout/\${checkoutId}\`)
+			.then(async (response) => {
+				if (!response.ok) return null;
+				const payload = (await response.json()) as { data?: { status?: string } };
+				return payload.data?.status ?? null;
+			})
+			.then((nextStatus) => {
+				status = nextStatus;
+			});
+	});
+</script>
+
+<div class="container mx-auto px-4 py-8">
+	<h1>Checkout Status</h1>
+	{#if checkoutId}
+		<p>Checkout ID: {checkoutId}</p>
+	{:else}
+		<p>Missing checkout_id.</p>
+	{/if}
+	{#if status}
+		<p>Status: {status}</p>
+	{:else}
+		<p>Waiting for local confirmation.</p>
+	{/if}
+</div>
+`],
   ["payments/polar/convex/backend/convex/polar.ts.hbs", `import { Polar } from "@convex-dev/polar";
 
 import { api, components } from "./_generated/api";
@@ -35501,4 +37589,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 506;
+export const TEMPLATE_COUNT = 545;
