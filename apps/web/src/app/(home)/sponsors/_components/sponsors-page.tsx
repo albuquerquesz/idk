@@ -230,7 +230,7 @@ export function SponsorsPage({
           <div className="flex flex-col items-end gap-2">
             <span className="font-mono text-muted-foreground text-xs">LAST_SYNC: {lastSync}</span>
             <a
-              href="https://github.com/sponsors/AmanVarshney01"
+              href="https://github.com/sponsors/albuquerquesz"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded border border-primary/40 px-3 py-1.5 font-mono text-primary text-xs transition-colors hover:bg-primary/10"
@@ -392,7 +392,7 @@ export function SponsorsPage({
               </p>
             )}
             <a
-              href="https://github.com/sponsors/AmanVarshney01"
+              href="https://github.com/sponsors/albuquerquesz"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded border border-primary/40 px-4 py-2 font-mono text-primary text-sm transition-colors hover:bg-primary/10"
