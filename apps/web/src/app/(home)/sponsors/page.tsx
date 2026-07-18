@@ -4,7 +4,7 @@ import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import type { Metadata } from "next";
 
-import { fetchSponsors } from "@/lib/sponsors";
+import { emptySponsorsData } from "@/lib/sponsors";
 
 import { SponsorsPage } from "./_components/sponsors-page";
 
@@ -33,9 +33,8 @@ export const metadata: Metadata = {
 };
 
 export default async function Sponsors() {
-  const [sponsorsData, stats] = await Promise.all([
-    fetchSponsors(),
-    fetchQuery(api.analytics.getStats, {}),
-  ]);
-  return <SponsorsPage sponsorsData={sponsorsData} totalProjects={stats?.totalProjects ?? 0} />;
+  const stats = await fetchQuery(api.analytics.getStats, {});
+  return (
+    <SponsorsPage sponsorsData={emptySponsorsData} totalProjects={stats?.totalProjects ?? 0} />
+  );
 }

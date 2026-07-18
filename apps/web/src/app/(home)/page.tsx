@@ -3,7 +3,7 @@ export const dynamic = "force-static";
 import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 
-import { fetchSponsors } from "@/lib/sponsors";
+import { emptySponsorsData } from "@/lib/sponsors";
 
 import CommandSection from "./_components/command-section";
 import Footer from "./_components/footer";
@@ -13,7 +13,6 @@ import StatsSection from "./_components/stats-section";
 import Testimonials from "./_components/testimonials";
 
 export default async function HomePage() {
-  const sponsorsData = await fetchSponsors();
   const fetchedTweets = await fetchQuery(api.testimonials.getTweets);
   const fetchedVideos = await fetchQuery(api.testimonials.getVideos);
   const videos = fetchedVideos.map((v) => ({
@@ -28,7 +27,7 @@ export default async function HomePage() {
         <HeroSection />
         <CommandSection />
         <StatsSection />
-        <SponsorsSection sponsorsData={sponsorsData} />
+        <SponsorsSection sponsorsData={emptySponsorsData} />
         <Testimonials tweets={tweets} videos={videos} />
       </div>
       <Footer />
