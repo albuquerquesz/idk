@@ -1,6 +1,8 @@
 import { ArrowDownRight, ArrowUpRight, Check, GitFork } from "lucide-react";
 import Link from "next/link";
 
+import SignalField from "./signal-field";
+
 const buildStages = [
   { index: "01", label: "Frontend", value: "Next.js" },
   { index: "02", label: "API", value: "Elysia" },
@@ -24,7 +26,7 @@ export default function HeroSection() {
           </div>
 
           <div className="relative my-16 max-w-5xl lg:my-20">
-            <h1 className="ui-display ui-enter text-[clamp(3.8rem,8.4vw,8.75rem)] leading-[0.82] [animation-delay:80ms]">
+            <h1 className="ui-display ui-enter text-[clamp(3.5rem,8vw,8.5rem)] leading-[0.9] [animation-delay:80ms]">
               One command.
               <br />
               <span className="text-primary">Every layer.</span>
@@ -66,7 +68,7 @@ export default function HeroSection() {
             </span>
           </div>
 
-          <div className="ui-rule-grid relative flex flex-1 flex-col justify-center p-5 sm:p-8">
+          <div className="ui-rule-grid relative flex flex-1 flex-col justify-center gap-8 p-5 sm:p-8">
             <div
               aria-hidden
               className="absolute top-0 bottom-0 left-10 w-px bg-primary/55 sm:left-14"
@@ -93,6 +95,8 @@ export default function HeroSection() {
                 </div>
               ))}
             </div>
+
+            <SignalField />
           </div>
 
           <div className="grid grid-cols-2 border-rule border-t">

@@ -15,10 +15,12 @@ import StatsSection from "./_components/stats-section";
 import Testimonials from "./_components/testimonials";
 
 export default async function HomePage() {
-  const [fetchedTweets, fetchedVideos] = await Promise.all([
+  const [tweetsResult, videosResult] = await Promise.allSettled([
     fetchQuery(api.testimonials.getTweets),
     fetchQuery(api.testimonials.getVideos),
   ]);
+  const fetchedTweets = tweetsResult.status === "fulfilled" ? tweetsResult.value : [];
+  const fetchedVideos = videosResult.status === "fulfilled" ? videosResult.value : [];
   const videos = fetchedVideos.map((v) => ({
     embedId: v.embedId,
     title: v.title,

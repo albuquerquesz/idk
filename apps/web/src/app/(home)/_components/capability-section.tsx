@@ -44,7 +44,7 @@ export default function CapabilitySection() {
     <section id="capabilities" className="ui-scroll-target border-rule border-b">
       <div className="grid lg:grid-cols-12">
         <div className="border-rule p-5 sm:p-8 lg:col-span-4 lg:border-r lg:p-10">
-          <p className="ui-kicker text-primary">02 / Generate</p>
+          <p className="ui-kicker text-primary">03 / Generate</p>
           <p className="mt-5 max-w-xs leading-relaxed text-muted-foreground">
             Scaffolding should remove setup work without removing architectural control.
           </p>
@@ -60,34 +60,34 @@ export default function CapabilitySection() {
 
       <div className="grid border-rule border-t lg:grid-cols-12">
         <div className="border-rule bg-primary text-primary-foreground lg:col-span-7 lg:border-r">
-          <div className="flex items-center justify-between border-black/30 border-b p-5 sm:p-6">
+          <div className="flex items-center justify-between border-primary-foreground/30 border-b p-5 sm:p-6">
             <p className="ui-kicker">Type ownership map</p>
             <Box className="size-4" aria-hidden />
           </div>
 
           <div className="grid min-h-[34rem] content-center gap-5 p-5 sm:p-8 lg:p-12">
             <div className="grid grid-cols-[1fr_auto_1fr] items-center">
-              <div className="border border-black/40 bg-black p-5 text-white">
-                <span className="ui-kicker text-white/55">Input</span>
+              <div className="border border-primary-foreground/40 bg-background p-5 text-foreground">
+                <span className="ui-kicker text-muted-foreground">Input</span>
                 <strong className="mt-3 block text-2xl">Stack config</strong>
               </div>
-              <div className="h-px w-10 bg-black sm:w-20" aria-hidden />
-              <div className="border border-black/40 bg-[#e5c15a] p-5 text-black">
-                <span className="ui-kicker text-black/60">Processor</span>
+              <div className="h-px w-10 bg-primary-foreground sm:w-20" aria-hidden />
+              <div className="border border-primary-foreground/40 bg-accent p-5 text-primary-foreground">
+                <span className="ui-kicker text-primary-foreground/65">Processor</span>
                 <strong className="mt-3 block text-2xl">Templates</strong>
               </div>
             </div>
 
-            <div className="mx-auto h-16 w-px bg-black" aria-hidden />
+            <div className="mx-auto h-16 w-px bg-primary-foreground" aria-hidden />
 
-            <div className="border border-black/40 bg-[#080806] p-6 text-white">
+            <div className="border border-primary-foreground/40 bg-background p-6 text-foreground">
               <div className="flex items-center justify-between gap-4">
-                <span className="ui-kicker text-white/55">Output</span>
+                <span className="ui-kicker text-muted-foreground">Output</span>
                 <span className="ui-kicker text-primary">No runtime attached</span>
               </div>
               <div className="mt-8 grid gap-3 sm:grid-cols-3">
                 {["apps/web", "apps/server", "packages/db"].map((path) => (
-                  <code key={path} className="border border-white/20 p-3 font-mono text-xs">
+                  <code key={path} className="border border-foreground/20 p-3 font-mono text-xs">
                     {path}
                   </code>
                 ))}
