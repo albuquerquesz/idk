@@ -67,6 +67,14 @@ This repo is a Bun + Turborepo monorepo.
 
 ## Agent skills
 
+### Start here
+
+For repository-scoped documentation and review workflows, use the [Better T Stack router](.agents/skills/better-t-stack/SKILL.md):
+
+- [`/better-t-stack document`](.agents/skills/better-t-stack/workflows/document/SKILL.md)
+- [`/better-t-stack review`](.agents/skills/better-t-stack/workflows/review/SKILL.md)
+- [Agent role runbook](docs/runbooks/agent-role-system.md)
+
 ### Issue tracker
 
 Issues are tracked in GitHub Issues for `AmanVarshney01/create-better-t-stack` using the `gh` CLI. See `docs/agents/issue-tracker.md`.
