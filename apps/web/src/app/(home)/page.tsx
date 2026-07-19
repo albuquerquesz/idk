@@ -5,6 +5,7 @@ import { fetchQuery } from "convex/nextjs";
 
 import { emptySponsorsData } from "@/lib/sponsors";
 
+import CapabilitySection from "./_components/capability-section";
 import CommandSection from "./_components/command-section";
 import Footer from "./_components/footer";
 import HeroSection from "./_components/hero-section";
@@ -13,8 +14,10 @@ import StatsSection from "./_components/stats-section";
 import Testimonials from "./_components/testimonials";
 
 export default async function HomePage() {
-  const fetchedTweets = await fetchQuery(api.testimonials.getTweets);
-  const fetchedVideos = await fetchQuery(api.testimonials.getVideos);
+  const [fetchedTweets, fetchedVideos] = await Promise.all([
+    fetchQuery(api.testimonials.getTweets),
+    fetchQuery(api.testimonials.getVideos),
+  ]);
   const videos = fetchedVideos.map((v) => ({
     embedId: v.embedId,
     title: v.title,
@@ -22,14 +25,13 @@ export default async function HomePage() {
   const tweets = fetchedTweets.map((t) => ({ tweetId: t.tweetId }));
 
   return (
-    <main className="container mx-auto min-h-svh">
-      <div className="mx-auto flex flex-col gap-8 px-4 pt-12">
-        <HeroSection />
-        <CommandSection />
-        <StatsSection />
-        <SponsorsSection sponsorsData={emptySponsorsData} />
-        <Testimonials tweets={tweets} videos={videos} />
-      </div>
+    <main className="ui-frame min-h-svh">
+      <HeroSection />
+      <SponsorsSection sponsorsData={emptySponsorsData} />
+      <CommandSection />
+      <CapabilitySection />
+      <StatsSection />
+      <Testimonials tweets={tweets} videos={videos} />
       <Footer />
     </main>
   );

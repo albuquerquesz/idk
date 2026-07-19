@@ -1,130 +1,81 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Play, Terminal } from "lucide-react";
-import { motion } from "motion/react";
-import Image from "next/image";
-import { useState } from "react";
-import { Tweet, type TwitterComponents } from "react-tweet";
+import { ArrowLeft, ArrowRight, ArrowUpRight, MessageSquareText, Play } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-export const components: TwitterComponents = {
-  AvatarImg: (props) => {
-    if (!props.src || props.src === "") {
-      return <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted" />;
-    }
-    return <Image {...props} alt={props.alt || "User avatar"} unoptimized />;
-  },
-  MediaImg: (props) => {
-    if (!props.src || props.src === "") {
-      return <div className="flex h-32 w-full items-center justify-center rounded bg-muted" />;
-    }
-    return <Image {...props} alt={props.alt || "Media content"} fill unoptimized />;
-  },
+type CommunityEntry = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  href: string;
+  cta: string;
+  kind: "video" | "note" | "project";
 };
 
-const sectionHeaderClass = "mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap";
-const sectionTitleClass = "flex items-center gap-2";
-const sectionTitleTextClass = "font-bold font-mono text-lg sm:text-xl";
-const sectionCountClass =
-  "w-full text-right font-mono text-muted-foreground text-xs sm:w-auto sm:text-left";
+const RAIL_EDGE_TOLERANCE = 24;
 
-const cardHeaderClass =
-  "sticky top-0 z-10 flex items-center gap-2 border-border border-b px-3 py-2";
+const fallbackEntries: CommunityEntry[] = [
+  {
+    eyebrow: "Project showcase",
+    title: "Inspect what people shipped.",
+    description:
+      "Browse real projects created from different combinations of runtimes, databases, and frontends.",
+    href: "/showcase",
+    cta: "Open showcase",
+    kind: "project",
+  },
+  {
+    eyebrow: "Public analytics",
+    title: "Watch the ecosystem choose.",
+    description:
+      "See which technologies developers combine and how stack preferences change over time.",
+    href: "/analytics",
+    cta: "Explore analytics",
+    kind: "project",
+  },
+  {
+    eyebrow: "Discord community",
+    title: "Bring the strange stack.",
+    description:
+      "Compare architecture choices, get unstuck, and help shape what the generator supports next.",
+    href: "https://discord.gg/ZYsbjpDaM5",
+    cta: "Join Discord",
+    kind: "note",
+  },
+];
 
-function ArchiveToggleButton({
-  expanded,
-  count,
-  onToggle,
-}: {
-  expanded: boolean;
-  count: number;
-  onToggle: () => void;
-}) {
+function CommunityCard({ entry, index }: { entry: CommunityEntry; index: number }) {
+  const isExternal = entry.href.startsWith("http");
+  const Icon = entry.kind === "video" ? Play : MessageSquareText;
+
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className="flex w-full items-center gap-2 rounded border border-border p-2 text-left font-mono transition-colors hover:bg-muted/10"
-    >
-      {expanded ? (
-        <ChevronUp className="h-4 w-4 text-primary" />
-      ) : (
-        <ChevronDown className="h-4 w-4 text-primary" />
-      )}
-      <span className="font-semibold text-muted-foreground text-sm">
-        TWEET_TESTIMONIALS.ARCHIVE
-      </span>
-      <span className="text-muted-foreground text-xs">({count})</span>
-      <div className="mx-2 h-px flex-1 bg-border" />
-      <span className="text-muted-foreground text-xs">{expanded ? "HIDE" : "SHOW"}</span>
-    </button>
+    <article className="w-[86%] shrink-0 snap-start border border-rule bg-card sm:w-[58%] lg:w-[38%]">
+      <div className="flex items-center justify-between border-rule border-b p-5">
+        <span className="ui-kicker text-primary">{String(index + 1).padStart(2, "0")}</span>
+        <Icon className="size-4 text-muted-foreground" aria-hidden />
+      </div>
+      <div className="flex min-h-80 flex-col justify-between p-6 sm:p-8">
+        <div>
+          <p className="ui-kicker text-muted-foreground">{entry.eyebrow}</p>
+          <h3 className="mt-8 max-w-md text-3xl font-semibold leading-tight tracking-tight">
+            {entry.title}
+          </h3>
+          <p className="mt-5 max-w-md leading-relaxed text-muted-foreground">{entry.description}</p>
+        </div>
+        <Link
+          href={entry.href}
+          target={isExternal ? "_blank" : undefined}
+          rel={isExternal ? "noreferrer" : undefined}
+          className="group mt-10 flex min-h-12 items-center justify-between border-rule border-t pt-4 font-mono text-xs uppercase tracking-[0.1em] text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        >
+          {entry.cta}
+          <ArrowUpRight className="size-4 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
+        </Link>
+      </div>
+    </article>
   );
 }
-
-const VideoCard = ({
-  video,
-  index,
-}: {
-  video: { embedId: string; title: string };
-  index: number;
-}) => (
-  <motion.div
-    className="w-full min-w-0"
-    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    transition={{
-      delay: index * 0.1,
-      duration: 0.4,
-      ease: "easeOut",
-    }}
-  >
-    <div className="w-full min-w-0 overflow-hidden rounded border border-border bg-fd-background">
-      <div className={cardHeaderClass}>
-        <Play className="h-3 w-3 text-primary" />
-        <span className="font-semibold font-mono text-xs">
-          [VIDEO_{String(index + 1).padStart(3, "0")}]
-        </span>
-      </div>
-      <div className="w-full min-w-0 overflow-hidden">
-        <div className="relative aspect-video w-full">
-          <iframe
-            src={`https://www.youtube.com/embed/${video.embedId}`}
-            title={video.title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="absolute inset-0 h-full w-full"
-          />
-        </div>
-      </div>
-    </div>
-  </motion.div>
-);
-
-const TweetCard = ({ tweetId, index }: { tweetId: string; index: number }) => (
-  <motion.div
-    className="w-full min-w-0"
-    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    transition={{
-      delay: index * 0.05,
-      duration: 0.4,
-      ease: "easeOut",
-    }}
-  >
-    <div className="w-full min-w-0 overflow-hidden rounded border border-border bg-fd-background">
-      <div className={cardHeaderClass}>
-        <span className="text-primary text-xs">▶</span>
-        <span className="font-semibold font-mono text-xs">
-          [TWEET_{String(index + 1).padStart(3, "0")}]
-        </span>
-      </div>
-      <div className="w-full min-w-0 overflow-hidden">
-        <div style={{ width: "100%", minWidth: 0, maxWidth: "100%" }}>
-          <Tweet id={tweetId} apiUrl={`/api/tweet/${tweetId}`} components={components} />
-        </div>
-      </div>
-    </div>
-  </motion.div>
-);
 
 export default function Testimonials({
   videos,
@@ -133,192 +84,117 @@ export default function Testimonials({
   videos: Array<{ embedId: string; title: string }>;
   tweets: Array<{ tweetId: string }>;
 }) {
-  const videosReversed = [...videos].reverse();
-  const [showAllTweets, setShowAllTweets] = useState(false);
+  const railRef = useRef<HTMLDivElement>(null);
+  const [canGoBack, setCanGoBack] = useState(false);
+  const [canGoForward, setCanGoForward] = useState(true);
 
-  const getResponsiveColumns = (numCols: number) => {
-    const columns: string[][] = Array(numCols)
-      .fill(null)
-      .map(() => []);
+  const liveEntries: CommunityEntry[] = [
+    ...videos.map((video) => ({
+      eyebrow: "Community walkthrough",
+      title: video.title,
+      description:
+        "Watch a community member build, explain, and adapt a generated TypeScript stack.",
+      href: `https://www.youtube.com/watch?v=${video.embedId}`,
+      cta: "Watch video",
+      kind: "video" as const,
+    })),
+    ...tweets.map((tweet, index) => ({
+      eyebrow: "Community field note",
+      title: `Dispatch ${String(index + 1).padStart(2, "0")} from the community.`,
+      description: "Open the original post to see the stack, context, and implementation notes.",
+      href: `https://x.com/i/status/${tweet.tweetId}`,
+      cta: "Read original post",
+      kind: "note" as const,
+    })),
+  ];
 
-    tweets.forEach((tweet, index) => {
-      const colIndex = index % numCols;
-      columns[colIndex].push(tweet.tweetId);
+  const entries = liveEntries.length > 0 ? [...liveEntries, ...fallbackEntries] : fallbackEntries;
+
+  const updateControls = useCallback(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    setCanGoBack(rail.scrollLeft > RAIL_EDGE_TOLERANCE);
+    setCanGoForward(rail.scrollLeft + rail.clientWidth < rail.scrollWidth - RAIL_EDGE_TOLERANCE);
+  }, []);
+
+  useEffect(() => {
+    updateControls();
+    window.addEventListener("resize", updateControls);
+    return () => window.removeEventListener("resize", updateControls);
+  }, [updateControls]);
+
+  const moveRail = (direction: -1 | 1) => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    rail.scrollBy({
+      left: direction * rail.clientWidth * 0.78,
+      behavior: reducedMotion ? "auto" : "smooth",
     });
-
-    return columns;
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.1 },
-    },
-  };
-
-  const columnVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05 },
-    },
   };
 
   return (
-    <div className="w-full max-w-full overflow-hidden px-4">
-      <div className="mb-8">
-        <div className={sectionHeaderClass}>
-          <div className={sectionTitleClass}>
-            <Play className="h-5 w-5 text-primary" />
-            <span className={sectionTitleTextClass}>VIDEO_TESTIMONIALS.LOG</span>
-          </div>
-          <div className="hidden h-px flex-1 bg-border sm:block" />
-          <span className={sectionCountClass}>[{videosReversed.length} ENTRIES]</span>
+    <section aria-labelledby="community-title" className="border-rule border-b">
+      <div className="grid lg:grid-cols-12">
+        <div className="border-rule p-5 sm:p-8 lg:col-span-4 lg:border-r lg:p-10">
+          <p className="ui-kicker text-primary">Community / Field notes</p>
         </div>
-
-        <div className="block sm:hidden">
-          <motion.div
-            className="flex flex-col gap-4"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
+        <div className="p-5 sm:p-8 lg:col-span-8 lg:p-10">
+          <h2
+            id="community-title"
+            className="ui-display max-w-4xl text-[clamp(2.7rem,5.5vw,5.8rem)] leading-[0.92]"
           >
-            {videosReversed.map((video, index) => (
-              <VideoCard key={`video-${video.embedId}`} video={video} index={index} />
-            ))}
-          </motion.div>
-        </div>
-
-        <div className="hidden sm:block">
-          <motion.div
-            className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {videosReversed.map((video, index) => (
-              <VideoCard key={`video-${video.embedId}`} video={video} index={index} />
-            ))}
-          </motion.div>
+            The work
+            <br />
+            <span className="text-primary">leaves a trail.</span>
+          </h2>
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+            Real builds, public decisions, and community notes—available without an autoplay loop.
+          </p>
         </div>
       </div>
 
-      <div>
-        <div className={sectionHeaderClass}>
-          <div className={sectionTitleClass}>
-            <Terminal className="h-5 w-5 text-primary" />
-            <span className={sectionTitleTextClass}>DEVELOPER_TESTIMONIALS.LOG</span>
-          </div>
-          <div className="hidden h-px flex-1 bg-border sm:block" />
-          <span className={sectionCountClass}>[{tweets.length} ENTRIES]</span>
+      <div className="border-rule border-t">
+        <div
+          ref={railRef}
+          className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto p-5 sm:p-8 lg:p-10"
+          onScroll={updateControls}
+          tabIndex={0}
+          aria-label="Community stories"
+        >
+          {entries.map((entry, index) => (
+            <CommunityCard key={`${entry.href}-${index}`} entry={entry} index={index} />
+          ))}
         </div>
 
-        <div className="block sm:hidden">
-          <div className="relative">
-            <motion.div
-              className={`flex flex-col gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
-                showAllTweets ? "h-auto" : "h-[700px]"
-              }`}
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
+        <div className="flex items-center justify-between border-rule border-t">
+          <p className="ui-kicker px-5 text-muted-foreground sm:px-8">
+            Manual rail / {entries.length} entries
+          </p>
+          <div className="flex">
+            <button
+              type="button"
+              className="grid size-14 place-items-center border-rule border-l text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
+              aria-label="Previous community stories"
+              disabled={!canGoBack}
+              onClick={() => moveRail(-1)}
             >
-              {tweets.map((tweet, index) => (
-                <TweetCard key={tweet.tweetId} tweetId={tweet.tweetId} index={index} />
-              ))}
-            </motion.div>
-
-            {!showAllTweets && (
-              <div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-linear-to-t from-background via-background/80 to-transparent" />
-            )}
-
-            <div className="my-4">
-              <ArchiveToggleButton
-                expanded={showAllTweets}
-                count={tweets.length}
-                onToggle={() => setShowAllTweets(!showAllTweets)}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="hidden sm:block lg:hidden">
-          <div className="relative">
-            <motion.div
-              className={`grid grid-cols-2 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
-                showAllTweets ? "h-auto" : "h-[650px]"
-              }`}
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
+              <ArrowLeft className="size-4" />
+            </button>
+            <button
+              type="button"
+              className="grid size-14 place-items-center border-rule border-l text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
+              aria-label="Next community stories"
+              disabled={!canGoForward}
+              onClick={() => moveRail(1)}
             >
-              {getResponsiveColumns(2).map((column, colIndex) => (
-                <motion.div
-                  key={`col-2-${column.length > 0 ? column[0] : `empty-${colIndex}`}`}
-                  className="flex min-w-0 flex-col gap-4"
-                  variants={columnVariants}
-                >
-                  {column.map((tweetId, tweetIndex) => {
-                    const globalIndex = colIndex + tweetIndex * 2;
-                    return <TweetCard key={tweetId} tweetId={tweetId} index={globalIndex} />;
-                  })}
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {!showAllTweets && (
-              <div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-linear-to-t from-background via-background/80 to-transparent" />
-            )}
-
-            <div className="my-4">
-              <ArchiveToggleButton
-                expanded={showAllTweets}
-                count={tweets.length}
-                onToggle={() => setShowAllTweets(!showAllTweets)}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="hidden lg:block">
-          <div className="relative">
-            <motion.div
-              className={`grid grid-cols-3 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
-                showAllTweets ? "h-auto" : "h-[600px]"
-              }`}
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              {getResponsiveColumns(3).map((column, colIndex) => (
-                <motion.div
-                  key={`col-3-${column.length > 0 ? column[0] : `empty-${colIndex}`}`}
-                  className="flex min-w-0 flex-col gap-4"
-                  variants={columnVariants}
-                >
-                  {column.map((tweetId, tweetIndex) => {
-                    const globalIndex = colIndex + tweetIndex * 3;
-                    return <TweetCard key={tweetId} tweetId={tweetId} index={globalIndex} />;
-                  })}
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {!showAllTweets && (
-              <div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-linear-to-t from-background via-background/80 to-transparent" />
-            )}
-
-            <div className="my-4">
-              <ArchiveToggleButton
-                expanded={showAllTweets}
-                count={tweets.length}
-                onToggle={() => setShowAllTweets(!showAllTweets)}
-              />
-            </div>
+              <ArrowRight className="size-4" />
+            </button>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

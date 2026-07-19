@@ -1,11 +1,10 @@
 "use client";
+
 import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { useNpmDownloadCounter } from "@erquhart/convex-oss-stats/react";
-import NumberFlow, { continuous } from "@number-flow/react";
 import { useQuery } from "convex/react";
-import { BarChart3, Package, Star, Terminal, TrendingUp, Users } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-import { FaGithub } from "react-icons/fa6";
 
 type NpmPackageStats = NonNullable<Parameters<typeof useNpmDownloadCounter>[0]>;
 type GithubRepoStats = {
@@ -17,188 +16,127 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 function getDaySpan(firstDate: string | null, lastDate: string | null): number {
   if (!firstDate || !lastDate) return 0;
+
   const start = Date.parse(`${firstDate}T00:00:00Z`);
   const end = Date.parse(`${lastDate}T00:00:00Z`);
+
   if (Number.isNaN(start) || Number.isNaN(end) || end < start) return 0;
   return Math.floor((end - start) / MILLISECONDS_PER_DAY) + 1;
+}
+
+function Metric({
+  index,
+  label,
+  value,
+  detail,
+}: {
+  index: string;
+  label: string;
+  value: string | number;
+  detail: string;
+}) {
+  return (
+    <div className="flex min-h-72 flex-col justify-between border-rule p-6 not-last:border-b sm:p-8 lg:not-last:border-r lg:not-last:border-b-0">
+      <div className="flex items-center justify-between">
+        <span className="ui-kicker text-primary">{index}</span>
+        <span className="ui-kicker text-muted-foreground">{label}</span>
+      </div>
+      <strong
+        className="ui-display text-[clamp(4rem,8vw,7rem)] leading-none tabular-nums"
+        aria-live="polite"
+      >
+        {value}
+      </strong>
+      <p className="ui-kicker text-muted-foreground">{detail}</p>
+    </div>
+  );
 }
 
 export default function StatsSection() {
   const stats = useQuery(api.analytics.getStats, {});
   const monthlyStats = useQuery(api.analytics.getMonthlyStats, {});
   const githubRepo = useQuery(api.stats.getGithubRepo, {
-    name: "albuquerquesz/idk",
+    name: "AmanVarshney01/create-better-t-stack",
   }) as GithubRepoStats | null | undefined;
   const npmPackages = useQuery(api.stats.getNpmPackages, {
     names: ["create-better-t-stack"],
   }) as NpmPackageStats | null | undefined;
 
   const liveNpmDownloadCount = useNpmDownloadCounter(npmPackages);
-
   const totalProjects = stats?.totalProjects ?? 0;
   const trackingDays = getDaySpan(monthlyStats?.firstDate ?? null, monthlyStats?.lastDate ?? null);
-  const avgProjectsPerDay = trackingDays > 0 ? (totalProjects / trackingDays).toFixed(1) : "0";
-  const lastUpdated = stats?.lastEventTime
-    ? new Date(stats.lastEventTime).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : null;
+  const averagePerDay = trackingDays > 0 ? (totalProjects / trackingDays).toFixed(1) : "0";
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <Link href="/analytics">
-        <div className="group cursor-pointer rounded-2xl bg-fd-background/75 p-4 transition-colors hover:bg-muted/10">
-          <div className="mb-3 flex items-center gap-2">
-            <Terminal className="h-4 w-4 text-primary" />
-            <span className="font-bold font-mono text-lg sm:text-xl">CLI_ANALYTICS.JSON</span>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1 font-mono text-muted-foreground text-xs uppercase tracking-wide">
-                <BarChart3 className="h-3 w-3" />
-                Total Projects
-              </span>
-              <NumberFlow
-                value={totalProjects}
-                className="font-bold font-mono text-lg text-primary tabular-nums"
-                transformTiming={{
-                  duration: 1000,
-                  easing: "ease-out",
-                }}
-                trend={1}
-                willChange
-                isolate
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1 font-mono text-muted-foreground text-xs uppercase tracking-wide">
-                <TrendingUp className="h-3 w-3" />
-                Avg/Day
-              </span>
-              <span className="font-mono text-foreground text-sm">{avgProjectsPerDay}</span>
-            </div>
-
-            <div className="rounded-lg bg-muted/15 px-2.5 py-2">
-              <div className="flex items-center justify-between gap-2 text-xs">
-                <span className="font-mono text-muted-foreground">Last Updated</span>
-                <span className="truncate font-mono text-accent">
-                  {lastUpdated ||
-                    new Date().toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                </span>
-              </div>
-            </div>
-          </div>
+    <section id="proof" className="ui-scroll-target border-rule border-b">
+      <div className="grid lg:grid-cols-12">
+        <div className="border-rule p-5 sm:p-8 lg:col-span-4 lg:border-r lg:p-10">
+          <p className="ui-kicker text-primary">04 / Proof</p>
+          <p className="mt-5 max-w-xs leading-relaxed text-muted-foreground">
+            Public package, public repository, and public usage telemetry. The work is inspectable.
+          </p>
         </div>
-      </Link>
-
-      <Link href="https://github.com/albuquerquesz/idk" target="_blank" rel="noopener noreferrer">
-        <div className="group cursor-pointer rounded-2xl bg-fd-background/75 p-4 transition-colors hover:bg-muted/10">
-          <div className="mb-3 flex items-center gap-2">
-            <FaGithub className="h-4 w-4 text-primary" />
-            <span className="font-bold font-mono text-lg sm:text-xl">GITHUB_REPO.GIT</span>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1 font-mono text-muted-foreground text-xs uppercase tracking-wide">
-                <Star className="h-3 w-3" />
-                Stars
-              </span>
-              <NumberFlow
-                value={githubRepo?.starCount || 0}
-                className="font-bold font-mono text-lg text-primary tabular-nums"
-                transformTiming={{
-                  duration: 800,
-                  easing: "ease-out",
-                }}
-                trend={1}
-                willChange
-                isolate
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1 font-mono text-muted-foreground text-xs uppercase tracking-wide">
-                <Users className="h-3 w-3" />
-                Contributors
-              </span>
-              <span className="font-mono text-foreground text-sm">
-                {githubRepo?.contributorCount || "—"}
-              </span>
-            </div>
-
-            <div className="rounded-lg bg-muted/15 px-2.5 py-2">
-              <div className="flex items-center justify-between gap-2 text-xs">
-                <span className="font-mono text-muted-foreground">Repository</span>
-                <span className="truncate font-mono text-accent">albuquerquesz/idk</span>
-              </div>
-            </div>
-          </div>
+        <div className="p-5 sm:p-8 lg:col-span-8 lg:p-10">
+          <h2 className="ui-display max-w-4xl text-[clamp(2.7rem,5.5vw,5.8rem)] leading-[0.92]">
+            Evidence,
+            <br />
+            <span className="text-primary">not a pitch deck.</span>
+          </h2>
         </div>
-      </Link>
+      </div>
 
-      <Link
-        href="https://www.npmjs.com/package/create-better-t-stack"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <div className="group cursor-pointer rounded-2xl bg-fd-background/75 p-4 transition-colors hover:bg-muted/10">
-          <div className="mb-3 flex items-center gap-2">
-            <Terminal className="h-4 w-4 text-primary" />
-            <span className="font-bold font-mono text-lg sm:text-xl">NPM_PACKAGE.JS</span>
-          </div>
+      <div className="grid border-rule border-t lg:grid-cols-3">
+        <Metric
+          index="01"
+          label="Generated"
+          value={totalProjects.toLocaleString()}
+          detail={`${averagePerDay} projects / tracked day`}
+        />
+        <Metric
+          index="02"
+          label="GitHub"
+          value={(githubRepo?.starCount ?? 0).toLocaleString()}
+          detail={`${githubRepo?.contributorCount ?? 0} contributors`}
+        />
+        <Metric
+          index="03"
+          label="NPM"
+          value={(liveNpmDownloadCount?.count ?? 0).toLocaleString()}
+          detail="live package downloads"
+        />
+      </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1 font-mono text-muted-foreground text-xs uppercase tracking-wide">
-                <Package className="h-3 w-3" />
-                Downloads
-              </span>
-              <NumberFlow
-                value={liveNpmDownloadCount?.count || 0}
-                className="font-bold font-mono text-lg text-primary tabular-nums"
-                transformTiming={{
-                  duration: liveNpmDownloadCount?.intervalMs || 1000,
-                  easing: "linear",
-                }}
-                trend={1}
-                willChange
-                plugins={[continuous]}
-                isolate
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1 font-mono text-muted-foreground text-xs uppercase tracking-wide">
-                <TrendingUp className="h-3 w-3" />
-                Avg/Day
-              </span>
-              <span className="font-mono text-foreground text-sm">
-                {npmPackages?.dayOfWeekAverages
-                  ? Math.round(
-                      npmPackages.dayOfWeekAverages.reduce((a: number, b: number) => a + b, 0) / 7,
-                    )
-                  : "—"}
-              </span>
-            </div>
-
-            <div className="rounded-lg bg-muted/15 px-2.5 py-2">
-              <div className="flex items-center justify-between gap-2 text-xs">
-                <span className="font-mono text-muted-foreground">Package</span>
-                <span className="truncate font-mono text-accent">create-better-t-stack</span>
-              </div>
-            </div>
-          </div>
+      <div className="grid border-rule border-t lg:grid-cols-12">
+        <div className="ui-rule-grid flex min-h-64 items-end p-6 sm:p-8 lg:col-span-8 lg:border-r lg:p-10">
+          <p className="max-w-3xl text-2xl font-semibold leading-tight sm:text-4xl">
+            Every generated project is a vote for explicit architecture over hidden defaults.
+          </p>
         </div>
-      </Link>
-    </div>
+        <div className="grid lg:col-span-4">
+          <Link
+            href="/analytics"
+            className="group flex min-h-32 items-center justify-between border-rule border-b p-6 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring sm:p-8"
+          >
+            <span>
+              <span className="ui-kicker block text-muted-foreground">Inspect</span>
+              <strong className="mt-2 block text-xl">Usage analytics</strong>
+            </span>
+            <ArrowUpRight className="size-5 text-primary transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
+          </Link>
+          <a
+            href="https://github.com/AmanVarshney01/create-better-t-stack"
+            target="_blank"
+            rel="noreferrer"
+            className="group flex min-h-32 items-center justify-between p-6 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring sm:p-8"
+          >
+            <span>
+              <span className="ui-kicker block text-muted-foreground">Audit</span>
+              <strong className="mt-2 block text-xl">Source on GitHub</strong>
+            </span>
+            <ArrowUpRight className="size-5 text-primary transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
+          </a>
+        </div>
+      </div>
+    </section>
   );
 }

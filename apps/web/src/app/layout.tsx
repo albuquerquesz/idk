@@ -1,6 +1,6 @@
 import { RootProvider } from "fumadocs-ui/provider/next";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Archivo, IBM_Plex_Mono } from "next/font/google";
 import Script from "next/script";
 import type { ReactNode } from "react";
 
@@ -9,16 +9,15 @@ import Providers from "@/components/providers";
 import "./global.css";
 import { cn } from "@/lib/utils";
 
-const geist = Geist({
+const archivo = Archivo({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-geist",
+  variable: "--font-archivo",
 });
 
-const geistMono = Geist_Mono({
+const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-geist-mono",
+  weight: ["400", "500", "600"],
+  variable: "--font-ibm-plex-mono",
 });
 
 const ogImage = "https://better-t-stack.dev/og/site/home.png";
@@ -110,7 +109,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
-      className={cn(geist.variable, geistMono.variable, "font-sans")}
+      className={cn(archivo.variable, ibmPlexMono.variable, "dark font-sans")}
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <body>
@@ -126,8 +126,9 @@ export default function Layout({ children }: { children: ReactNode }) {
             },
           }}
           theme={{
-            enableSystem: true,
-            defaultTheme: "system",
+            enableSystem: false,
+            defaultTheme: "dark",
+            forcedTheme: "dark",
           }}
         >
           <Providers>{children}</Providers>

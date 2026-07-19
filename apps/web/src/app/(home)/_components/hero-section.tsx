@@ -1,57 +1,123 @@
-import NpmPackage from "./npm-package";
+import { ArrowDownRight, ArrowUpRight, Check, GitFork } from "lucide-react";
+import Link from "next/link";
+
+const buildStages = [
+  { index: "01", label: "Frontend", value: "Next.js" },
+  { index: "02", label: "API", value: "Elysia" },
+  { index: "03", label: "Database", value: "Postgres" },
+  { index: "04", label: "Auth", value: "Better Auth" },
+] as const;
 
 export default function HeroSection() {
   return (
-    <section className="rounded-2xl bg-fd-background px-4 py-6 sm:px-6 sm:py-8">
-      <div className="relative mb-6 flex items-center justify-center rounded-2xl bg-fd-background px-3 py-4 sm:px-4 sm:py-5">
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-6">
-          <pre className="ascii-art text-primary text-xs leading-tight sm:text-sm">
-            {`
-██████╗  ██████╗ ██╗     ██╗
-██╔══██╗██╔═══██╗██║     ██║
-██████╔╝██║   ██║██║     ██║
-██╔══██╗██║   ██║██║     ██║
-██║  ██║╚██████╔╝███████╗███████╗
-╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝`}
-          </pre>
+    <section id="top" className="ui-scroll-target border-rule border-b">
+      <div className="grid lg:grid-cols-12">
+        <div className="relative flex min-h-[42rem] flex-col justify-between overflow-hidden border-rule px-5 py-8 sm:px-8 sm:py-10 lg:col-span-8 lg:min-h-[calc(100svh-3.5rem)] lg:border-r lg:px-12 lg:py-14">
+          <div
+            aria-hidden
+            className="ui-rule-grid pointer-events-none absolute inset-0 opacity-30 [mask-image:linear-gradient(to_bottom,black,transparent_72%)]"
+          />
 
-          <pre className="ascii-art text-primary text-xs leading-tight sm:text-sm">
-            {`
-██╗   ██╗ ██████╗ ██╗   ██╗██████╗
-╚██╗ ██╔╝██╔═══██╗██║   ██║██╔══██╗
- ╚████╔╝ ██║   ██║██║   ██║██████╔╝
-  ╚██╔╝  ██║   ██║██║   ██║██╔══██╗
-   ██║   ╚██████╔╝╚██████╔╝██║  ██║
-   ╚═╝    ╚═════╝  ╚═════╝ ╚═╝  ╚═╝`}
-          </pre>
+          <div className="ui-enter relative flex items-center gap-3 text-primary">
+            <span className="size-2 bg-primary" />
+            <p className="ui-kicker">Open-source TypeScript stack generator</p>
+          </div>
 
-          <pre className="ascii-art text-primary text-xs leading-tight sm:text-sm">
-            {`
- ██████╗ ██╗    ██╗███╗   ██╗
-██╔═══██╗██║    ██║████╗  ██║
-██║   ██║██║ █╗ ██║██╔██╗ ██║
-██║   ██║██║███╗██║██║╚██╗██║
-╚██████╔╝╚███╔███╔╝██║ ╚████║
- ╚═════╝  ╚══╝╚══╝ ╚═╝  ╚═══╝`}
-          </pre>
+          <div className="relative my-16 max-w-5xl lg:my-20">
+            <h1 className="ui-display ui-enter text-[clamp(3.8rem,8.4vw,8.75rem)] leading-[0.82] [animation-delay:80ms]">
+              One command.
+              <br />
+              <span className="text-primary">Every layer.</span>
+              <br />
+              Yours.
+            </h1>
+          </div>
 
-          <pre className="ascii-art text-primary text-xs leading-tight sm:text-sm">
-            {`
-███████╗████████╗ █████╗  ██████╗██╗  ██╗
-██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
-███████╗   ██║   ███████║██║     █████╔╝
-╚════██║   ██║   ██╔══██║██║     ██╔═██╗
-███████║   ██║   ██║  ██║╚██████╗██║  ██╗
-╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝`}
-          </pre>
+          <div className="ui-enter relative grid gap-8 border-rule border-t pt-7 [animation-delay:160ms] md:grid-cols-[1fr_auto] md:items-end">
+            <p className="max-w-xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+              Compose a production-ready TypeScript stack, generate it locally, and keep every line
+              of the result. No platform lock-in. No hidden runtime.
+            </p>
+            <div className="flex flex-col gap-px sm:flex-row">
+              <Link
+                href="/new"
+                className="inline-flex min-h-12 items-center justify-between gap-8 bg-primary px-5 font-semibold text-primary-foreground transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                Build in the browser
+                <ArrowUpRight className="size-4" />
+              </Link>
+              <Link
+                href="/docs"
+                className="inline-flex min-h-12 items-center justify-between gap-8 border border-rule px-5 font-semibold transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                Read the docs
+                <ArrowDownRight className="size-4" />
+              </Link>
+            </div>
+          </div>
         </div>
+
+        <aside className="flex min-h-[38rem] flex-col bg-card lg:col-span-4 lg:min-h-[calc(100svh-3.5rem)]">
+          <div className="flex items-center justify-between border-rule border-b px-5 py-4">
+            <p className="ui-kicker text-muted-foreground">Build signal / 04 layers</p>
+            <span className="ui-kicker flex items-center gap-2 text-primary">
+              <span className="size-1.5 animate-pulse bg-primary" />
+              Ready
+            </span>
+          </div>
+
+          <div className="ui-rule-grid relative flex flex-1 flex-col justify-center p-5 sm:p-8">
+            <div
+              aria-hidden
+              className="absolute top-0 bottom-0 left-10 w-px bg-primary/55 sm:left-14"
+            />
+
+            <div className="relative grid gap-3">
+              {buildStages.map((stage, index) => (
+                <div
+                  key={stage.label}
+                  className="group grid min-h-24 grid-cols-[3rem_1fr_auto] items-center border border-rule bg-background p-4 transition-colors hover:border-primary"
+                >
+                  <span className="relative z-10 grid size-8 place-items-center bg-primary font-mono text-xs font-semibold text-primary-foreground">
+                    {stage.index}
+                  </span>
+                  <span className="pl-4">
+                    <span className="ui-kicker block text-muted-foreground">{stage.label}</span>
+                    <span className="mt-1 block text-lg font-semibold">{stage.value}</span>
+                  </span>
+                  {index < buildStages.length - 1 ? (
+                    <GitFork aria-hidden className="size-4 text-muted-foreground" />
+                  ) : (
+                    <Check aria-hidden className="size-4 text-primary" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 border-rule border-t">
+            <div className="border-rule border-r p-5">
+              <span className="ui-kicker text-muted-foreground">Output</span>
+              <strong className="mt-2 block text-lg">Source code</strong>
+            </div>
+            <div className="p-5">
+              <span className="ui-kicker text-muted-foreground">License</span>
+              <strong className="mt-2 block text-lg">MIT</strong>
+            </div>
+          </div>
+        </aside>
       </div>
 
-      <div className="text-center">
-        <p className="mx-auto max-w-3xl font-mono text-base text-muted-foreground sm:text-lg">
-          Modern CLI for scaffolding end-to-end type-safe TypeScript projects
-        </p>
-        <NpmPackage />
+      <div className="grid border-rule sm:grid-cols-2 lg:grid-cols-4">
+        {["Web", "API", "Database", "Infrastructure"].map((label, index) => (
+          <div
+            key={label}
+            className="flex min-h-16 items-center gap-4 border-rule px-5 not-last:border-b sm:[&:nth-child(odd)]:border-r sm:[&:nth-child(-n+2)]:border-b lg:not-last:border-r lg:not-last:border-b-0"
+          >
+            <span className="ui-kicker text-primary">{String(index + 1).padStart(2, "0")}</span>
+            <span className="ui-kicker text-muted-foreground">{label} stays typed</span>
+          </div>
+        ))}
       </div>
     </section>
   );

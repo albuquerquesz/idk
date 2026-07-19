@@ -1,130 +1,201 @@
 "use client";
-import { Check, ChevronDown, ChevronRight, Copy, Terminal, Zap } from "lucide-react";
+
+import { ArrowUpRight, Check, Copy, FileCode2, GitBranch, Terminal } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-import PackageIcon from "./icons";
+type PackageManager = "bun" | "pnpm" | "npm";
+
+const commands: Record<PackageManager, string> = {
+  bun: "bun create better-t-stack@latest",
+  pnpm: "pnpm create better-t-stack@latest",
+  npm: "npx create-better-t-stack@latest",
+};
+
+const generatedFiles = [
+  { depth: 0, name: "apps/", kind: "dir" },
+  { depth: 1, name: "web/", kind: "dir" },
+  { depth: 1, name: "server/", kind: "dir" },
+  { depth: 0, name: "packages/", kind: "dir" },
+  { depth: 1, name: "db/", kind: "dir" },
+  { depth: 1, name: "auth/", kind: "dir" },
+  { depth: 0, name: "turbo.json", kind: "file" },
+] as const;
 
 export default function CommandSection() {
-  const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
-  const [selectedPM, setSelectedPM] = useState<"npm" | "pnpm" | "bun">("bun");
+  const [selectedManager, setSelectedManager] = useState<PackageManager>("bun");
+  const [copied, setCopied] = useState(false);
 
-  const commands = {
-    npm: "npx create-better-t-stack@latest",
-    pnpm: "pnpm create better-t-stack@latest",
-    bun: "bun create better-t-stack@latest",
-  };
-
-  const copyCommand = (command: string, packageManager: string) => {
-    navigator.clipboard.writeText(command);
-    setCopiedCommand(packageManager);
-    setTimeout(() => setCopiedCommand(null), 2000);
+  const copyCommand = async () => {
+    try {
+      await navigator.clipboard.writeText(commands[selectedManager]);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <div className="flex h-full flex-col justify-between rounded-2xl bg-fd-background/75 p-4 transition-colors hover:bg-muted/10">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Terminal className="h-4 w-4 text-primary" />
-            <span className="font-bold font-mono text-lg sm:text-xl">CLI_COMMAND</span>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
+    <section id="product" className="ui-scroll-target border-rule border-b">
+      <div className="grid border-rule lg:grid-cols-12">
+        <div className="border-rule p-5 sm:p-8 lg:col-span-4 lg:border-r lg:p-10">
+          <p className="ui-kicker text-primary">01 / Compose</p>
+        </div>
+        <div className="border-rule p-5 sm:p-8 lg:col-span-8 lg:p-10">
+          <h2 className="ui-display max-w-4xl text-[clamp(2.7rem,5.5vw,5.8rem)] leading-[0.92]">
+            Choose the parts.
+            <br />
+            Keep the whole.
+          </h2>
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+            Better T Stack resolves compatible choices into a codebase you can read, change, and
+            deploy on your own terms.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-12">
+        <div className="flex flex-col border-rule bg-card lg:col-span-5 lg:border-r">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-rule border-b p-5 sm:p-6">
+            <span className="flex items-center gap-2">
+              <Terminal className="size-4 text-primary" aria-hidden />
+              <span className="ui-kicker">Start from your terminal</span>
+            </span>
+            <div className="flex border border-rule" role="group" aria-label="Package manager">
+              {(Object.keys(commands) as PackageManager[]).map((manager) => (
                 <button
+                  key={manager}
                   type="button"
-                  className="flex items-center gap-2 rounded-md bg-muted/20 px-3 py-1.5 font-mono text-xs transition-colors hover:bg-muted/35"
-                />
-              }
-            >
-              <PackageIcon pm={selectedPM} className="h-3 w-3" />
-              <span>{selectedPM.toUpperCase()}</span>
-              <ChevronDown className="h-3 w-3" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {(["bun", "pnpm", "npm"] as const).map((pm) => (
-                <DropdownMenuItem
-                  key={pm}
-                  onClick={() => setSelectedPM(pm)}
                   className={cn(
-                    "flex items-center gap-2",
-                    selectedPM === pm && "bg-accent text-background",
+                    "ui-kicker min-h-11 min-w-16 border-rule px-3 transition-colors not-last:border-r hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring",
+                    selectedManager === manager
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground",
                   )}
+                  aria-pressed={selectedManager === manager}
+                  onClick={() => {
+                    setSelectedManager(manager);
+                    setCopied(false);
+                  }}
                 >
-                  <PackageIcon pm={pm} className="h-3 w-3" />
-                  <span>{pm.toUpperCase()}</span>
-                  {selectedPM === pm && <Check className="ml-auto h-3 w-3 text-background" />}
-                </DropdownMenuItem>
+                  {manager}
+                </button>
               ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </div>
+          </div>
+
+          <div className="flex flex-1 flex-col justify-between gap-12 p-5 sm:p-8 lg:p-10">
+            <div className="border border-rule bg-background">
+              <div className="flex items-center justify-between border-rule border-b px-4 py-3">
+                <span className="ui-kicker text-muted-foreground">~/projects</span>
+                <span className="flex gap-1" aria-hidden>
+                  <span className="size-1.5 bg-muted-foreground/40" />
+                  <span className="size-1.5 bg-muted-foreground/40" />
+                  <span className="size-1.5 bg-primary" />
+                </span>
+              </div>
+              <div className="flex min-h-32 items-center gap-3 overflow-x-auto px-4 py-6 font-mono text-sm sm:text-base">
+                <span className="text-primary">$</span>
+                <code className="whitespace-nowrap">{commands[selectedManager]}</code>
+              </div>
+              <button
+                type="button"
+                className="ui-kicker flex min-h-12 w-full items-center justify-between border-rule border-t px-4 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
+                onClick={copyCommand}
+              >
+                <span aria-live="polite">{copied ? "Command copied" : "Copy command"}</span>
+                {copied ? (
+                  <Check className="size-4 text-primary" aria-hidden />
+                ) : (
+                  <Copy className="size-4" aria-hidden />
+                )}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-px bg-rule border border-rule">
+              <div className="bg-card p-4">
+                <span className="ui-kicker text-muted-foreground">Prompt</span>
+                <strong className="mt-2 block text-2xl">Guided</strong>
+              </div>
+              <div className="bg-card p-4">
+                <span className="ui-kicker text-muted-foreground">Result</span>
+                <strong className="mt-2 block text-2xl">Editable</strong>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-3">
-          <div
-            role="button"
-            tabIndex={0}
-            className="builder-focus-ring flex cursor-pointer items-center justify-between rounded-xl bg-muted/20 p-3"
-            onClick={() => copyCommand(commands[selectedPM], selectedPM)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                copyCommand(commands[selectedPM], selectedPM);
-              }
-            }}
-            aria-label={`Copy ${selectedPM} command`}
-            title="Click to copy command"
-          >
-            <div className="flex items-center gap-2 font-mono text-sm">
-              <span className="text-primary">$</span>
-              <span className="text-foreground">{commands[selectedPM]}</span>
+        <div className="relative overflow-hidden lg:col-span-7">
+          <div className="ui-rule-grid absolute inset-0 opacity-35" aria-hidden />
+          <div className="relative flex min-h-[42rem] flex-col justify-between p-5 sm:p-8 lg:p-10">
+            <div className="flex items-center justify-between">
+              <span className="ui-kicker text-muted-foreground">Generated architecture</span>
+              <span className="ui-kicker text-primary">Type graph intact</span>
             </div>
-            <span className="flex items-center gap-1 rounded-md bg-muted/20 px-2 py-1 font-mono text-xs transition-colors group-hover:bg-muted/35">
-              {copiedCommand === selectedPM ? (
-                <Check className="h-3 w-3 text-primary" />
-              ) : (
-                <Copy className="h-3 w-3" />
-              )}
-              {copiedCommand === selectedPM ? "COPIED!" : "COPY"}
-            </span>
+
+            <div className="mx-auto grid w-full max-w-2xl grid-cols-[minmax(0,1fr)_3rem_minmax(0,1fr)] items-center gap-y-3">
+              <div className="border border-primary bg-primary p-5 text-primary-foreground">
+                <span className="ui-kicker">Client</span>
+                <strong className="mt-2 block text-xl">App Router</strong>
+              </div>
+              <div className="h-px bg-primary" aria-hidden />
+              <div className="border border-rule bg-background p-5">
+                <span className="ui-kicker text-muted-foreground">Contract</span>
+                <strong className="mt-2 block text-xl">Typed API</strong>
+              </div>
+
+              <div className="col-start-3 h-8 w-px justify-self-center bg-primary" aria-hidden />
+
+              <div className="col-start-3 border border-rule bg-background p-5">
+                <span className="ui-kicker text-muted-foreground">Server</span>
+                <strong className="mt-2 block text-xl">Runtime</strong>
+              </div>
+
+              <div className="col-start-3 h-8 w-px justify-self-center bg-primary" aria-hidden />
+
+              <div className="col-start-3 border border-rule bg-background p-5">
+                <span className="ui-kicker text-muted-foreground">Data</span>
+                <strong className="mt-2 block text-xl">Schema</strong>
+              </div>
+            </div>
+
+            <div className="grid gap-px bg-rule border border-rule sm:grid-cols-2">
+              <div className="bg-background p-5">
+                <GitBranch className="size-4 text-primary" aria-hidden />
+                <p className="mt-4 font-semibold">Compatible combinations</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  Invalid paths disappear before generation.
+                </p>
+              </div>
+              <Link
+                href="/new"
+                className="group flex min-h-36 flex-col justify-between bg-primary p-5 text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
+              >
+                <FileCode2 className="size-4" aria-hidden />
+                <span className="flex items-end justify-between gap-4 text-xl font-semibold">
+                  Open the visual builder
+                  <ArrowUpRight className="size-5 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
+                </span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
 
-      <Link href="/new">
-        <div className="group flex h-full cursor-pointer flex-col justify-between rounded-2xl bg-fd-background/75 p-4 transition-colors hover:bg-muted/10">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ChevronRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
-              <span className="font-bold font-mono text-lg sm:text-xl">STACK_BUILDER</span>
-            </div>
-            <div className="rounded-md bg-primary/15 px-2 py-1 font-mono text-xs text-primary">
-              INTERACTIVE
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between rounded-xl bg-muted/20 p-3">
-              <div className="flex items-center gap-2 text-sm">
-                <Zap className="h-4 w-4 text-primary" />
-                <span className="text-foreground">Interactive configuration wizard</span>
-              </div>
-              <div className="rounded-md bg-primary px-2 py-1 font-mono text-primary-foreground text-xs transition-colors group-hover:bg-primary/90">
-                START
-              </div>
-            </div>
-          </div>
-        </div>
-      </Link>
-    </div>
+      <div className="border-rule border-t px-5 py-4 sm:px-8">
+        <p className="ui-kicker text-muted-foreground">
+          Output preview /{" "}
+          {generatedFiles.map((file) => (
+            <span key={file.name} className="mr-4 inline-block text-foreground">
+              {file.depth > 0 ? "↳ " : ""}
+              {file.name}
+            </span>
+          ))}
+        </p>
+      </div>
+    </section>
   );
 }

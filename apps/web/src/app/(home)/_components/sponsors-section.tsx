@@ -1,367 +1,75 @@
-"use client";
-import { ChevronDown, ChevronUp, Globe, Heart, Star, Terminal } from "lucide-react";
-import Image from "next/image";
+import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { FaGithub } from "react-icons/fa6";
 
-import {
-  getSponsorUrl,
-  getSponsorUrlLabel,
-  isLifetimeSpecialSponsor,
-  shouldShowLifetimeTotal,
-} from "@/lib/sponsor-utils";
 import type { SponsorsData } from "@/lib/types";
 
+const ecosystem = [
+  "Next.js",
+  "React",
+  "Astro",
+  "Solid",
+  "Hono",
+  "Elysia",
+  "tRPC",
+  "oRPC",
+  "Drizzle",
+  "Prisma",
+  "Convex",
+  "Better Auth",
+] as const;
+
 export default function SponsorsSection({ sponsorsData }: { sponsorsData: SponsorsData }) {
-  const [showPastSponsors, setShowPastSponsors] = useState(false);
-
-  const specialSponsors = sponsorsData.specialSponsors;
-  const regularSponsors = sponsorsData.sponsors;
-  const pastSponsors = sponsorsData.pastSponsors;
-
-  const totalCurrentSponsors = specialSponsors.length + regularSponsors.length;
+  const currentSponsors = [...sponsorsData.specialSponsors, ...sponsorsData.sponsors];
 
   return (
-    <div className="">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
-        <div className="flex items-center gap-2">
-          <Terminal className="h-5 w-5 text-primary" />
-          <span className="font-bold font-mono text-lg sm:text-xl">SPONSORS_DATABASE.JSON</span>
+    <section aria-labelledby="ecosystem-title" className="border-rule border-b">
+      <div className="grid lg:grid-cols-12">
+        <div className="border-rule p-5 sm:p-8 lg:col-span-4 lg:border-r lg:p-10">
+          <p className="ui-kicker text-primary">Ecosystem / Bring your preferences</p>
+          <h2 id="ecosystem-title" className="mt-4 text-3xl font-semibold tracking-tight">
+            One generator.
+            <br />
+            Real choices.
+          </h2>
         </div>
-        <div className="hidden h-px flex-1 bg-border sm:block" />
-        <div className="flex w-full items-center justify-end gap-3 sm:w-auto sm:justify-start">
-          <span className="font-mono text-muted-foreground text-xs">
-            [{totalCurrentSponsors} RECORDS]
-          </span>
-          <Link
-            href="/sponsors"
-            className="font-mono text-primary text-xs transition-colors hover:text-accent"
-          >
-            VIEW_ALL →
-          </Link>
+
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:col-span-8 lg:grid-cols-4">
+          {ecosystem.map((item, index) => (
+            <div
+              key={item}
+              className="flex min-h-24 items-center justify-between border-rule p-5 not-last:border-b sm:border-r sm:[&:nth-last-child(-n+2)]:border-b-0 md:[&:nth-child(2n)]:border-r md:[&:nth-child(3n)]:border-r-0 md:[&:nth-last-child(-n+3)]:border-b-0 lg:[&:nth-child(3n)]:border-r lg:[&:nth-child(4n)]:border-r-0 lg:[&:nth-last-child(-n+4)]:border-b-0"
+            >
+              <span className="font-semibold">{item}</span>
+              <span className="ui-kicker text-muted-foreground">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
-      {totalCurrentSponsors === 0 ? (
-        <div className="space-y-4">
-          <div className="rounded border border-border p-8">
-            <div className="text-center">
-              <div className="mb-4 flex items-center justify-center gap-2">
-                <span className="font-mono text-muted-foreground">NO_SPONSORS_FOUND.NULL</span>
-              </div>
-              <div className="flex items-center justify-center gap-2 text-sm">
-                <span className="text-primary">$</span>
-                <span className="text-muted-foreground">Be the first to support this project!</span>
-              </div>
-            </div>
-          </div>
-          <div className="rounded border border-border p-4">
-            <a
-              href="https://github.com/sponsors/albuquerquesz"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 text-primary transition-colors hover:text-accent"
-            >
-              <Heart className="h-4 w-4" />
-              <span>BECOME_SPONSOR.SH</span>
-            </a>
-          </div>
+
+      <div className="grid border-rule border-t md:grid-cols-[1fr_auto]">
+        <div className="flex min-h-16 items-center overflow-x-auto px-5 sm:px-8">
+          <p className="ui-kicker whitespace-nowrap text-muted-foreground">
+            Community-backed /{" "}
+            <span className="text-foreground">
+              {currentSponsors.length > 0
+                ? currentSponsors
+                    .slice(0, 5)
+                    .map((sponsor) => sponsor.name)
+                    .join(" · ")
+                : "Open source, open decisions, open contributions"}
+            </span>
+          </p>
         </div>
-      ) : (
-        <div className="space-y-8">
-          {specialSponsors.length > 0 && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {specialSponsors.map((entry, index) => {
-                  const sponsorUrl = getSponsorUrl(entry);
-
-                  return (
-                    <div
-                      key={entry.githubId}
-                      className="rounded border border-border"
-                      style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                      <div className="border-border border-b px-3 py-2">
-                        <div className="flex items-center gap-2">
-                          <Star className="h-4 w-4 text-yellow-500/90" />
-                          <div className="ml-auto flex items-center gap-2 text-muted-foreground text-xs">
-                            <span>SPECIAL</span>
-                            <span>•</span>
-                            <span>{entry.sinceWhen.toUpperCase()}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-4">
-                        <div className="flex gap-4">
-                          <div className="flex-shrink-0">
-                            <Image
-                              src={entry.avatarUrl}
-                              alt={entry.name}
-                              width={100}
-                              height={100}
-                              className="rounded border border-border transition-colors duration-300"
-                              unoptimized
-                            />
-                          </div>
-                          <div className="grid grid-cols-1 grid-rows-[1fr_auto] justify-between py-2">
-                            <div>
-                              <h3 className="truncate font-semibold text-foreground text-sm">
-                                {entry.name}
-                              </h3>
-                              {shouldShowLifetimeTotal(entry) ? (
-                                <>
-                                  {entry.tierName && (
-                                    <p className="text-primary text-xs">{entry.tierName}</p>
-                                  )}
-                                  <p className="text-muted-foreground text-xs">
-                                    Total: {entry.formattedAmount}
-                                  </p>
-                                </>
-                              ) : (
-                                <p className="text-primary text-xs">{entry.tierName}</p>
-                              )}
-                            </div>
-                            <div className="flex flex-col">
-                              <a
-                                href={entry.githubUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-primary"
-                              >
-                                <FaGithub className="size-3" />
-                                <span className="truncate">{entry.githubId}</span>
-                              </a>
-                              {entry.websiteUrl && (
-                                <a
-                                  href={sponsorUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="group flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-primary"
-                                >
-                                  <Globe className="size-3" />
-                                  <span className="truncate">{getSponsorUrlLabel(entry)}</span>
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {regularSponsors.length > 0 && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {regularSponsors.map((entry, index) => {
-                  const sponsorUrl = getSponsorUrl(entry);
-                  return (
-                    <div
-                      key={entry.githubId}
-                      className="rounded border border-border"
-                      style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                      <div className="border-border border-b px-3 py-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-primary text-xs">▶</span>
-                          <div className="ml-auto flex items-center gap-2 text-muted-foreground text-xs">
-                            <span>{entry.sinceWhen.toUpperCase()}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-4">
-                        <div className="flex gap-4">
-                          <div className="flex-shrink-0">
-                            <Image
-                              src={entry.avatarUrl}
-                              alt={entry.name}
-                              width={100}
-                              height={100}
-                              className="rounded border border-border transition-colors duration-300"
-                              unoptimized
-                            />
-                          </div>
-                          <div className="grid grid-cols-1 grid-rows-[1fr_auto] justify-between py-2">
-                            <div>
-                              <h3 className="truncate font-semibold text-foreground text-sm">
-                                {entry.name}
-                              </h3>
-                              {shouldShowLifetimeTotal(entry) ? (
-                                <>
-                                  {entry.tierName && (
-                                    <p className="text-primary text-xs">{entry.tierName}</p>
-                                  )}
-                                  <p className="text-muted-foreground text-xs">
-                                    Total: {entry.formattedAmount}
-                                  </p>
-                                </>
-                              ) : (
-                                <p className="text-primary text-xs">{entry.tierName}</p>
-                              )}
-                            </div>
-                            <div className="flex flex-col">
-                              <a
-                                href={entry.githubUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-primary"
-                              >
-                                <FaGithub className="size-3" />
-                                <span className="truncate">{entry.githubId}</span>
-                              </a>
-                              {entry.websiteUrl && (
-                                <a
-                                  href={sponsorUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="group flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-primary"
-                                >
-                                  <Globe className="size-3" />
-                                  <span className="truncate">{getSponsorUrlLabel(entry)}</span>
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {pastSponsors.length > 0 && (
-            <div className="space-y-4">
-              <button
-                type="button"
-                onClick={() => setShowPastSponsors(!showPastSponsors)}
-                className="flex w-full items-center gap-2 rounded border border-muted p-2 text-left transition-colors hover:bg-muted"
-              >
-                {showPastSponsors ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
-                <span className="font-semibold font-mono text-muted-foreground text-sm">
-                  PAST_SPONSORS.ARCHIVE
-                </span>
-                <span className="text-muted-foreground text-xs">({pastSponsors.length})</span>
-                <div className="mx-2 h-px flex-1 bg-border" />
-                <span className="text-muted-foreground text-xs">
-                  {showPastSponsors ? "HIDE" : "SHOW"}
-                </span>
-              </button>
-
-              {showPastSponsors && (
-                <div className="slide-in-from-top-2 grid animate-in grid-cols-1 gap-4 duration-300 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {pastSponsors.map((entry, index) => {
-                    const wasSpecial = isLifetimeSpecialSponsor(entry);
-                    const sponsorUrl = getSponsorUrl(entry);
-
-                    return (
-                      <div
-                        key={entry.githubId}
-                        className="rounded border border-border/70 bg-muted/20"
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
-                        <div className="border-border/70 border-b px-3 py-2">
-                          <div className="flex items-center gap-2">
-                            {wasSpecial ? (
-                              <Star className="h-4 w-4 text-yellow-500/60" />
-                            ) : (
-                              <span className="text-muted-foreground text-xs">◆</span>
-                            )}
-                            <div className="ml-auto flex items-center gap-2 text-muted-foreground text-xs">
-                              {wasSpecial && <span>SPECIAL</span>}
-                              {wasSpecial && <span>•</span>}
-                              <span>{entry.sinceWhen.toUpperCase()}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-4">
-                          <div className="flex gap-4">
-                            <div className="flex-shrink-0">
-                              <Image
-                                src={entry.avatarUrl}
-                                alt={entry.name}
-                                width={80}
-                                height={80}
-                                className="rounded border border-border/70"
-                                unoptimized
-                              />
-                            </div>
-                            <div className="grid grid-cols-1 grid-rows-[1fr_auto] justify-between">
-                              <div>
-                                <h3 className="truncate font-semibold font-mono text-muted-foreground text-sm">
-                                  {entry.name}
-                                </h3>
-                                {shouldShowLifetimeTotal(entry) ? (
-                                  <>
-                                    {entry.tierName && (
-                                      <p className="text-muted-foreground/70 text-xs">
-                                        {entry.tierName}
-                                      </p>
-                                    )}
-                                    <p className="text-muted-foreground/50 text-xs">
-                                      Total: {entry.formattedAmount}
-                                    </p>
-                                  </>
-                                ) : (
-                                  <p className="text-muted-foreground/70 text-xs">
-                                    {entry.tierName}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="flex flex-col">
-                                <a
-                                  href={entry.githubUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="group flex items-center gap-2 text-muted-foreground/70 text-xs transition-colors hover:text-muted-foreground"
-                                >
-                                  <FaGithub className="size-3" />
-                                  <span className="truncate">{entry.githubId}</span>
-                                </a>
-                                {entry.websiteUrl && (
-                                  <a
-                                    href={sponsorUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="group flex items-center gap-2 text-muted-foreground/70 text-xs transition-colors hover:text-muted-foreground"
-                                  >
-                                    <Globe className="size-3" />
-                                    <span className="truncate">{getSponsorUrlLabel(entry)}</span>
-                                  </a>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="rounded border border-border p-4">
-            <a
-              href="https://github.com/sponsors/albuquerquesz"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 text-primary transition-colors hover:text-accent"
-            >
-              <Heart className="h-4 w-4" />
-              <span>SUPPORT_PROJECT.SH</span>
-            </a>
-          </div>
-        </div>
-      )}
-    </div>
+        <Link
+          href="/sponsors"
+          className="ui-kicker flex min-h-14 items-center justify-between gap-10 border-rule border-t px-5 text-primary transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring md:min-h-16 md:border-t-0 md:border-l"
+        >
+          Meet the sponsors
+          <ArrowUpRight className="size-4" />
+        </Link>
+      </div>
+    </section>
   );
 }
