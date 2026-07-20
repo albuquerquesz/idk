@@ -61,7 +61,7 @@ const mosaicItems = [
     href: "/analytics",
     eyebrow: "Analytics",
     title: "Inspect the signals.",
-    description: "See public adoption and ecosystem activity around Better T Stack.",
+    description: "See public adoption and ecosystem activity around Kubo.",
     tone: "muted",
     layoutClassName: "md:col-span-3 lg:col-span-3 lg:col-start-1 lg:row-start-3",
   },
@@ -99,30 +99,31 @@ function MosaicTile({ item }: { item: MosaicItem }) {
   const isFeatured = item.tone === "featured";
   const labelClassName = isFeatured ? "text-primary-foreground/70" : "text-primary";
   const descriptionClassName = isFeatured ? "text-primary-foreground/80" : "text-muted-foreground";
-  const dividerClassName = isFeatured ? "border-primary-foreground/25" : "border-rule";
   const arrowClassName = isFeatured ? "text-primary-foreground" : "text-primary";
 
   return (
     <Link
       href={item.href}
-      className={`group relative flex min-h-40 flex-col justify-between p-5 outline-none ring-1 ring-transparent motion-safe:transition-[background-color,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring hover:ring-1 sm:min-h-48 sm:p-6 lg:min-h-0 lg:p-7 ${toneClassNames[item.tone]} ${item.layoutClassName}`}
+      className={`group relative min-h-40 p-5 outline-none ring-1 ring-transparent motion-safe:transition-[background-color,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring hover:ring-1 sm:min-h-48 sm:p-6 lg:min-h-0 lg:p-7 ${toneClassNames[item.tone]} ${item.layoutClassName}`}
     >
-      <span className="flex items-center justify-between gap-4">
-        <span className={`ui-kicker ${labelClassName}`}>
-          {item.index} / {item.eyebrow}
+      <span className="flex h-full min-h-0 flex-col justify-between overflow-hidden">
+        <span className="flex items-center justify-between gap-4">
+          <span className={`ui-kicker ${labelClassName}`}>
+            {item.index} / {item.eyebrow}
+          </span>
+          <ArrowUpRight
+            className={`size-4 shrink-0 ${arrowClassName} motion-safe:transition-transform motion-safe:group-hover:-translate-y-1 motion-safe:group-hover:translate-x-1`}
+            aria-hidden
+          />
         </span>
-        <ArrowUpRight
-          className={`size-4 shrink-0 ${arrowClassName} motion-safe:transition-transform motion-safe:group-hover:-translate-y-1 motion-safe:group-hover:translate-x-1`}
-          aria-hidden
-        />
-      </span>
 
-      <span className={`mt-10 border-t pt-4 ${dividerClassName}`}>
-        <span className="block max-w-md text-2xl font-semibold leading-[1.02] tracking-tight sm:text-3xl">
-          {item.title}
-        </span>
-        <span className={`mt-3 block max-w-md text-sm leading-relaxed ${descriptionClassName}`}>
-          {item.description}
+        <span className="mt-auto pt-4">
+          <span className="block max-w-md text-2xl font-semibold leading-[1.02] tracking-tight sm:text-3xl">
+            {item.title}
+          </span>
+          <span className={`mt-3 block max-w-md text-sm leading-relaxed ${descriptionClassName}`}>
+            {item.description}
+          </span>
         </span>
       </span>
     </Link>
@@ -168,8 +169,8 @@ export default function ProductMosaicSection() {
       </div>
 
       <nav
-        aria-label="Explore Better T Stack"
-        className="grid gap-px border-rule border-t bg-rule md:grid-cols-6 lg:auto-rows-[9rem] lg:grid-cols-12"
+        aria-label="Explore Kubo"
+        className="grid gap-px border-rule border-t bg-rule md:grid-cols-6 lg:auto-rows-[12rem] lg:grid-cols-12"
       >
         {mosaicItems.map((item) => (
           <MosaicTile key={item.id} item={item} />
