@@ -1,8 +1,6 @@
 import { ArrowDownRight, ArrowUpRight, Check, GitFork } from "lucide-react";
 import Link from "next/link";
 
-import SignalField from "./signal-field";
-
 const buildStages = [
   { index: "01", label: "Frontend", value: "Next.js" },
   { index: "02", label: "API", value: "Elysia" },
@@ -15,18 +13,8 @@ export default function HeroSection() {
     <section id="top" className="ui-scroll-target border-rule border-b">
       <div className="grid lg:grid-cols-12">
         <div className="relative flex min-h-[42rem] flex-col justify-between overflow-hidden border-rule px-5 py-8 sm:px-8 sm:py-10 lg:col-span-8 lg:min-h-[calc(100svh-3.5rem)] lg:border-r lg:px-12 lg:py-14">
-          <div
-            aria-hidden
-            className="ui-rule-grid pointer-events-none absolute inset-0 opacity-30 [mask-image:linear-gradient(to_bottom,black,transparent_72%)]"
-          />
-
-          <div className="ui-enter relative flex items-center gap-3 text-primary">
-            <span className="size-2 bg-primary" />
-            <p className="ui-kicker">Open-source TypeScript stack generator</p>
-          </div>
-
           <div className="relative my-16 max-w-5xl lg:my-20">
-            <h1 className="ui-display ui-enter text-[clamp(3.5rem,8vw,8.5rem)] leading-[0.9] [animation-delay:80ms]">
+            <h1 className="ui-display ui-enter text-[clamp(3.5rem,8vw,8.5rem)] leading-[0.9]">
               One command.
               <br />
               <span className="text-primary">Every layer.</span>
@@ -59,16 +47,8 @@ export default function HeroSection() {
           </div>
         </div>
 
-        <aside className="flex min-h-[38rem] flex-col bg-card lg:col-span-4 lg:min-h-[calc(100svh-3.5rem)]">
-          <div className="flex items-center justify-between border-rule border-b px-5 py-4">
-            <p className="ui-kicker text-muted-foreground">Build signal / 04 layers</p>
-            <span className="ui-kicker flex items-center gap-2 text-primary">
-              <span className="size-1.5 animate-pulse bg-primary" />
-              Ready
-            </span>
-          </div>
-
-          <div className="ui-rule-grid relative flex flex-1 flex-col justify-center gap-8 p-5 sm:p-8">
+        <aside className="flex flex-col bg-card lg:col-span-4 lg:self-start">
+          <div className="relative flex flex-col justify-center gap-6 p-5 sm:gap-8 sm:p-8">
             <div
               aria-hidden
               className="absolute top-0 bottom-0 left-10 w-px bg-primary/55 sm:left-14"
@@ -78,7 +58,7 @@ export default function HeroSection() {
               {buildStages.map((stage, index) => (
                 <div
                   key={stage.label}
-                  className="group grid min-h-24 grid-cols-[3rem_1fr_auto] items-center border border-rule bg-background p-4 transition-colors hover:border-primary"
+                  className="group grid min-h-20 grid-cols-[3rem_1fr_auto] items-center border border-rule bg-background p-4 transition-colors hover:border-primary sm:min-h-24"
                 >
                   <span className="relative z-10 grid size-8 place-items-center bg-primary font-mono text-xs font-semibold text-primary-foreground">
                     {stage.index}
@@ -94,19 +74,6 @@ export default function HeroSection() {
                   )}
                 </div>
               ))}
-            </div>
-
-            <SignalField />
-          </div>
-
-          <div className="grid grid-cols-2 border-rule border-t">
-            <div className="border-rule border-r p-5">
-              <span className="ui-kicker text-muted-foreground">Output</span>
-              <strong className="mt-2 block text-lg">Source code</strong>
-            </div>
-            <div className="p-5">
-              <span className="ui-kicker text-muted-foreground">License</span>
-              <strong className="mt-2 block text-lg">MIT</strong>
             </div>
           </div>
         </aside>
